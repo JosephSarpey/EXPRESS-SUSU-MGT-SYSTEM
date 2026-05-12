@@ -1,0 +1,251 @@
+import { useEffect, useState } from 'react'
+import {
+  ArrowLeft,
+  Search,
+  Wallet,
+  Lock,
+  Unlock,
+  ChevronLeft,
+  ChevronRight,
+  Eye
+} from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { adminService } from '@/services/api/admin.service'
+import { format } from 'date-fns'
+import { useNavigate } from 'react-router-dom'
+
+export function WalletsPage() {
+  const navigate = useNavigate()
+  const [wallets, setWallets] = useState<any[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [limit] = useState(10)
+  const [isLoading, setIsLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [isProcessing, setIsProcessing] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchWallets()
+  }, [page, limit, search])
+
+  const fetchWallets = async () => {
+    try {
+      setIsLoading(true)
+      const res = await adminService.listWallets({ page, limit, search })
+      setWallets(res.data || [])
+      setTotal(res.meta?.total || 0)
+    } catch (err) {
+      console.error('Error fetching wallets:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleLock = async (userId: string) => {
+    if (!confirm('Are you sure you want to lock this wallet?')) return
+    try {
+      setIsProcessing(userId)
+      await adminService.lockWallet(userId)
+      await fetchWallets()
+    } catch (err) {
+      console.error('Error locking wallet:', err)
+    } finally {
+      setIsProcessing(null)
+    }
+  }
+
+  const handleUnlock = async (userId: string) => {
+    if (!confirm('Are you sure you want to unlock this wallet?')) return
+    try {
+      setIsProcessing(userId)
+      await adminService.unlockWallet(userId)
+      await fetchWallets()
+    } catch (err) {
+      console.error('Error unlocking wallet:', err)
+    } finally {
+      setIsProcessing(null)
+    }
+  }
+
+  const totalPages = Math.ceil(total / limit)
+
+  return (
+    <div className="space-y-8 pb-12">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">Wallets</h1>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-1">View and manage user wallets.</p>
+          </div>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader className="p-4 md:p-6 border-b dark:border-zinc-800">
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div className="relative w-full md:w-96">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <Input
+                placeholder="Search by user email or name..."
+                className="pl-10 h-10 rounded-full"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-zinc-500 dark:text-zinc-400 uppercase bg-zinc-50/50 dark:bg-zinc-900/50 border-b dark:border-zinc-800">
+                <tr>
+                  <th className="px-6 py-4 font-bold">User</th>
+                  <th className="px-6 py-4 font-bold">Wallet ID</th>
+                  <th className="px-6 py-4 font-bold">Balance</th>
+                  <th className="px-6 py-4 font-bold">Status</th>
+                  <th className="px-6 py-4 font-bold">Created</th>
+                  <th className="px-6 py-4 font-bold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y dark:divide-zinc-800">
+                {isLoading ? (
+                  [1, 2, 3, 4, 5].map(i => (
+                    <tr key={i} className="animate-pulse">
+                      <td colSpan={6} className="px-6 py-4">
+                        <div className="h-10 bg-zinc-100 dark:bg-zinc-800 rounded-lg" />
+                      </td>
+                    </tr>
+                  ))
+                ) : wallets.length > 0 ? (
+                  wallets.map((wallet) => (
+                    <tr key={wallet.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center font-bold">
+                            {wallet.user?.fullName?.charAt(0) || 'U'}
+                          </div>
+                          <div>
+                            <p className="font-bold text-zinc-900 dark:text-zinc-100">{wallet.user?.fullName || 'Unknown'}</p>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">{wallet.user?.email || 'No email'}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="font-medium text-zinc-900 dark:text-zinc-100">{wallet.id.slice(0, 8).toUpperCase()}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="font-extrabold text-zinc-900 dark:text-zinc-100">
+                          {wallet.currency} {Number(wallet.balance || 0).toFixed(2)}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={wallet.isLocked ? 'destructive' : 'success'}>
+                            {wallet.isLocked ? 'Locked' : 'Active'}
+                          </Badge>
+                          {wallet.user?.role && (
+                            <Badge variant="outline" className="text-xs">
+                              {wallet.user.role}
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400">
+                        {format(new Date(wallet.createdAt), 'MMM dd, yyyy')}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-lg text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                            onClick={() => navigate(`/admin/wallets/${wallet.userId}`)}
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {wallet.isLocked ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="rounded-lg text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                              onClick={() => handleUnlock(wallet.userId)}
+                              disabled={isProcessing === wallet.userId}
+                              title="Unlock Wallet"
+                            >
+                              {isProcessing === wallet.userId ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+                              ) : (
+                                <Unlock className="h-4 w-4" />
+                              )}
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="rounded-lg text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20"
+                              onClick={() => handleLock(wallet.userId)}
+                              disabled={isProcessing === wallet.userId}
+                              title="Lock Wallet"
+                            >
+                              {isProcessing === wallet.userId ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+                              ) : (
+                                <Lock className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-24 text-center">
+                      <Wallet className="h-12 w-12 text-zinc-200 dark:text-zinc-800 mx-auto mb-4" />
+                      <p className="text-zinc-500 dark:text-zinc-400">No wallets found.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between p-6 border-t dark:border-zinc-800">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                Page <span className="text-zinc-900 dark:text-zinc-100 font-bold">{page}</span> of <span className="text-zinc-900 dark:text-zinc-100 font-bold">{totalPages}</span>
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="rounded-xl"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="rounded-xl"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

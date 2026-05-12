@@ -1,0 +1,399 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//////////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////////
+
+enum Role {
+  ADMIN
+  CUSTOMER
+  WORKER
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  REVERSAL
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+enum PaymentGateway {
+  PAYSTACK
+  WORKER_CASH
+}
+
+enum PaymentMethod {
+  MTN_MOMO
+  TELECEL_CASH
+  AIRTELTIGO_MONEY
+  BANK_TRANSFER
+  USSD
+  CARD
+  CASH
+}
+
+enum SessionStatus {
+  ACTIVE
+  ENDED
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  SYSTEM
+}
+
+//////////////////////////////////////////////////////
+// USER PROFILE
+//////////////////////////////////////////////////////
+
+model User {
+  id              String   @id @db.Uuid
+  email           String   @unique
+  phone           String?  @unique
+  fullName        String
+  role            Role     @default(CUSTOMER)
+  status          AccountStatus @default(PENDING)
+
+  emailVerified   Boolean  @default(false)
+  phoneVerified   Boolean  @default(false)
+
+  profileImage    String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  wallet              Wallet?
+  transactions        Transaction[]
+  workerTransactions  Transaction[] @relation("WorkerTransactions")
+
+  workerSessions      WorkerSession[]
+
+  notifications       Notification[]
+
+  otpCodes            OTPVerification[]
+
+  resetTokens         PasswordResetToken[]
+
+  auditLogs           AuditLog[]
+
+  approvalsReceived   AccountApproval[] @relation("ApprovedUser")
+  approvalsMade       AccountApproval[] @relation("ApprovedBy")
+
+  addresses           Address[]
+}
+
+//////////////////////////////////////////////////////
+// WALLET
+//////////////////////////////////////////////////////
+
+model Wallet {
+  id            String   @id @default(uuid()) @db.Uuid
+
+  userId        String   @unique @db.Uuid
+
+  balance       Decimal  @default(0.00) @db.Decimal(15, 2)
+
+  currency      String   @default("GHS")
+
+  isLocked      Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions  Transaction[]
+}
+
+//////////////////////////////////////////////////////
+// TRANSACTIONS
+//////////////////////////////////////////////////////
+
+model Transaction {
+  id               String   @id @default(uuid()) @db.Uuid
+
+  referenceId      String   @unique
+
+  userId           String   @db.Uuid
+
+  workerId         String?  @db.Uuid
+
+  walletId         String   @db.Uuid
+
+  type             TransactionType
+
+  amount           Decimal  @db.Decimal(15, 2)
+
+  balanceBefore    Decimal? @db.Decimal(15, 2)
+
+  balanceAfter     Decimal? @db.Decimal(15, 2)
+
+  paymentGateway   PaymentGateway
+
+  paymentMethod    PaymentMethod
+
+  status           TransactionStatus @default(PENDING)
+
+  description      String?
+
+  gatewayResponse  Json?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  user             User @relation(fields: [userId], references: [id])
+
+  worker           User? @relation("WorkerTransactions", fields: [workerId], references: [id])
+
+  wallet           Wallet @relation(fields: [walletId], references: [id])
+
+  @@index([userId])
+  @@index([referenceId])
+}
+
+//////////////////////////////////////////////////////
+// OTP VERIFICATION
+//////////////////////////////////////////////////////
+
+model OTPVerification {
+  id           String   @id @default(uuid()) @db.Uuid
+
+  userId       String   @db.Uuid
+
+  otpCode      String
+
+  purpose      String
+
+  expiresAt    DateTime
+
+  verified     Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+//////////////////////////////////////////////////////
+// WORKER SESSIONS
+//////////////////////////////////////////////////////
+
+model WorkerSession {
+  id            String   @id @default(uuid()) @db.Uuid
+
+  workerId      String   @db.Uuid
+
+  loginTime     DateTime @default(now())
+
+  logoutTime    DateTime?
+
+  status        SessionStatus @default(ACTIVE)
+
+  ipAddress     String?
+
+  deviceInfo    String?
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  worker        User @relation(fields: [workerId], references: [id])
+}
+
+//////////////////////////////////////////////////////
+// ACCOUNT APPROVALS
+//////////////////////////////////////////////////////
+
+model AccountApproval {
+  id            String   @id @default(uuid()) @db.Uuid
+
+  userId        String   @db.Uuid
+
+  approvedById  String   @db.Uuid
+
+  remarks       String?
+
+  approvedAt    DateTime @default(now())
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  user          User @relation("ApprovedUser", fields: [userId], references: [id])
+
+  approvedBy    User @relation("ApprovedBy", fields: [approvedById], references: [id])
+}
+
+//////////////////////////////////////////////////////
+// AUDIT LOGS
+//////////////////////////////////////////////////////
+
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+
+  actorId       String   @db.Uuid
+
+  action        String
+
+  targetId      String?
+
+  entityType    String?
+
+  oldValues     Json?
+
+  newValues     Json?
+
+  ipAddress     String?
+
+  userAgent     String?
+
+  createdAt     DateTime @default(now())
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  actor         User @relation(fields: [actorId], references: [id])
+}
+
+//////////////////////////////////////////////////////
+// PASSWORD RESET TOKENS
+//////////////////////////////////////////////////////
+
+model PasswordResetToken {
+  id            String   @id @default(uuid()) @db.Uuid
+
+  userId        String   @db.Uuid
+
+  token         String
+
+  expiresAt     DateTime
+
+  used          Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+//////////////////////////////////////////////////////
+// NOTIFICATIONS
+//////////////////////////////////////////////////////
+
+model Notification {
+  id            String   @id @default(uuid()) @db.Uuid
+
+  userId        String   @db.Uuid
+
+  type          NotificationType
+
+  subject       String?
+
+  message       String
+
+  sent          Boolean  @default(false)
+
+  sentAt        DateTime?
+
+  readAt        DateTime?
+
+  createdAt     DateTime @default(now())
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+//////////////////////////////////////////////////////
+// SYSTEM SETTINGS
+//////////////////////////////////////////////////////
+
+model SystemSetting {
+  id            String   @id @default(uuid()) @db.Uuid
+
+  settingKey    String   @unique
+
+  settingValue  String
+
+  description   String?
+
+  updatedAt     DateTime @updatedAt
+}
+
+
+/////// ADDRESS ///////
+
+model Address {
+  id            String   @id @default(uuid()) @db.Uuid
+
+  userId        String   @db.Uuid
+
+  street        String?
+
+  city          String?
+
+  state         String?
+
+  zipCode       String?
+
+  isPrimary     Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+
+  updatedAt     DateTime @updatedAt
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
