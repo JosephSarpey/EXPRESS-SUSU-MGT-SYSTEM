@@ -10,7 +10,7 @@ export function LandingPage() {
           <div className="bg-blue-600 p-1.5 rounded-lg">
             <Shield className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">EXPRESS SUSU MGT.</span>
+          <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">EXPRESS CAPITAL MGT.</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link className="text-sm font-medium hover:text-blue-600 transition-colors dark:text-zinc-400 dark:hover:text-blue-400" to="/login">
