@@ -1,8 +1,16 @@
+
+
+
+
+
+
+
+
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/auth-store'
 import { authService } from '@/services/api/auth.service'
-import { ShieldAlert, Mail, Lock, Loader2, ArrowRight, AlertCircle } from 'lucide-react'
+import { ShieldAlert, Mail, Lock, Loader2, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -10,16 +18,14 @@ export function LoginPage() {
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
 
   const handleLoginSuccess = async () => {
     try {
-      // The cookie is now set by the backend, so we just fetch the profile
       const profile = await authService.getMe()
       setAuth(profile)
       
-      // Navigate based on role
       if (profile.role === 'ADMIN') navigate('/admin/dashboard', { replace: true })
       else if (profile.role === 'WORKER') navigate('/worker/dashboard', { replace: true })
       else navigate('/customer/dashboard', { replace: true })
@@ -43,108 +49,112 @@ export function LoginPage() {
     }
   }
 
+  const inputClasses = "block w-full rounded-2xl border border-zinc-800 bg-zinc-950/50 py-3 pl-11 pr-11 text-zinc-100 placeholder-zinc-500 transition-all focus:border-emerald-500 focus:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
+  const labelClasses = "block text-sm font-medium text-emerald-500 mb-1.5 ml-1";
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-zinc-950">
-      <div className="w-full max-w-md space-y-8 rounded-3xl bg-white p-8 shadow-xl dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+    <div className="flex h-screen items-center justify-center bg-zinc-950 p-4 overflow-hidden font-sans">
+      <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl bg-[#1a1a1a] shadow-2xl border border-zinc-800">
         
         {/* Header */}
-        <div className="text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/30">
-            <ShieldAlert className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+        <div className="px-8 pt-8 pb-4 shrink-0 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-900/20">
+            <ShieldAlert className="h-6 w-6 text-emerald-500" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Welcome Back
-          </h2>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Sign in to your SUSU Management account
-          </p>
+          <h2 className="mt-4 text-2xl font-bold text-white tracking-tight">Welcome Back</h2>
+          <p className="text-xs text-zinc-500">Sign in to your SUSU Management account</p>
         </div>
 
-        {error && (
-          <div className="flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400 border border-red-100 dark:border-red-900/30">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <p>{error}</p>
-          </div>
-        )}
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-8 pb-8 scrollbar-hide" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+          <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
 
-        {/* Regular Login Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          {error && (
+            <div className="mb-6 flex items-center gap-3 rounded-xl bg-red-900/20 p-3 text-xs text-red-400 border border-red-900/30">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <p>{error}</p>
+            </div>
+          )}
+
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Email address
-              </label>
-              <div className="relative mt-2">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <Mail className="h-5 w-5 text-zinc-400" />
-                </div>
+              <label className={labelClasses}>Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-blue-500 dark:focus:bg-zinc-900"
+                  className={inputClasses}
                   placeholder="you@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Password
-              </label>
-              <div className="relative mt-2">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <Lock className="h-5 w-5 text-zinc-400" />
-                </div>
+              <label className={labelClasses}>Password</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-blue-500 dark:focus:bg-zinc-900"
+                  className={inputClasses}
                   placeholder="••••••••"
                 />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-emerald-500 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                type="checkbox"
-                className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:checked:bg-blue-600"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Remember me
-              </label>
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-zinc-700 bg-zinc-950 text-emerald-600 focus:ring-emerald-500/20"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-xs font-medium text-zinc-400">
+                  Remember me
+                </label>
+              </div>
+              <div className="text-right">
+                <Link to="/auth/forgot-password"  className="block text-xs font-bold text-emerald-500 hover:text-emerald-400">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
-            <div className="text-sm space-y-1 text-right">
-              <Link to="/auth/forgot-password" title="Reset your password" id="forgot-password-link" className="block font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
-                Forgot password?
-              </Link>
-              <Link to="/register" className="block font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
-                Need an account?
-              </Link>
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="group flex w-full justify-center items-center gap-2 rounded-2xl bg-blue-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-500 hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-zinc-900"
-          >
-            {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <>
-                Sign in
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </>
-            )}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group w-full flex justify-center items-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-900/40 hover:bg-emerald-500 transition-all disabled:opacity-50 mt-2"
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  Sign in
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </>
+              )}
+            </button>
+
+            <p className="text-center text-xs text-zinc-500 pt-2">
+              Need an account?{' '}
+              <Link to="/register" className="font-bold text-emerald-500 hover:text-emerald-400">
+                Register here
+              </Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   )

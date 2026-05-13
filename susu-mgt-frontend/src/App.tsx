@@ -4,7 +4,7 @@ import { RoleGuard } from './components/features/auth/role-guard'
 import { LayoutWrapper } from './components/layout/layout-wrapper'
 
 // Pages
-import { LandingPage } from './pages/landing'
+import HomePage from './pages/landingPage/HomePage'
 import { LoginPage } from './pages/auth/login'
 import { RegisterPage } from './pages/auth/register'
 import { VerifyEmailPage } from './pages/auth/verify-email'
@@ -48,7 +48,7 @@ function App() {
     <div className="min-h-screen bg-background font-sans antialiased">
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/verify-email" element={<VerifyEmailPage />} />
