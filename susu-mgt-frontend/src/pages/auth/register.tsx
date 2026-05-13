@@ -1,8 +1,10 @@
+
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/auth-store'
 import { authService } from '@/services/api/auth.service'
-import { ShieldAlert, Mail, Lock, Loader2, ArrowRight, AlertCircle, Phone, User as UserIcon } from 'lucide-react'
+import { ShieldAlert, Mail, Lock, Loader2, ArrowRight, AlertCircle, Phone, User as UserIcon, Eye, EyeOff } from 'lucide-react'
+import logo from "../../assets/logo2.png";
 
 export function RegisterPage() {
   const { isLoading, setLoading } = useAuthStore()
@@ -12,12 +14,30 @@ export function RegisterPage() {
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  
+  // Separate visibility states for better control
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Strictly numbers only, max length 10
+    if (/^\d*$/.test(value) && value.length <= 10) {
+      setPhone(value);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (phone.length !== 10) {
+        setError('Phone number must be exactly 10 digits')
+        return
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -25,198 +45,147 @@ export function RegisterPage() {
     }
 
     setLoading(true)
-
     try {
-      await authService.signUp({
-        email,
-        password,
-        fullName,
-        phone,
-      })
-      
+      await authService.signUp({ email, password, fullName, phone })
       setSuccess(true)
       setLoading(false)
-      
-      // Optionally auto-login or redirect to login
-      // Since Supabase might require email verification, we'll show a success message
     } catch (err: any) {
       setError(err.message || 'Registration failed')
       setLoading(false)
     }
   }
 
+  const inputClasses = "block w-full rounded-xl border border-zinc-800 bg-zinc-950/50 py-2.5 pl-10 pr-10 text-sm text-zinc-100 placeholder-zinc-500 transition-all focus:border-emerald-500 focus:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/10";
+  const labelClasses = "block text-xs font-medium text-emerald-500 mb-1 ml-1";
+
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-zinc-950">
-        <div className="w-full max-w-md space-y-8 rounded-3xl bg-white p-8 shadow-xl dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-900/30">
-            <Mail className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Check your email
-          </h2>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            We've sent a verification link to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{email}</span>. Please verify your account to continue.
-          </p>
-          <div className="pt-6">
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400"
-            >
-              Back to Sign in
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+      <div className="flex h-screen items-center justify-center bg-zinc-950">
+        <div className="w-full h-full sm:h-auto sm:max-w-md bg-[#1a1a1a] p-8 flex flex-col justify-center items-center text-center">
+          <Mail className="h-12 w-12 text-emerald-500 mb-4" />
+          <h2 className="text-2xl font-bold text-white">Check your email</h2>
+          <p className="text-zinc-400 mt-2">Verification link sent to <span className="text-emerald-400">{email}</span></p>
+          <Link to="/login" className="mt-8 text-emerald-500 font-bold flex items-center gap-2">
+            Back to Sign in <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-zinc-950">
-      <div className="w-full max-w-md space-y-8 rounded-3xl bg-white p-8 shadow-xl dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+    <div className="flex h-screen w-screen items-center justify-center bg-zinc-950 overflow-hidden touch-none">
+      <div className="w-full h-full sm:h-auto sm:max-w-md sm:max-h-[95vh] flex flex-col bg-[#1a1a1a] sm:rounded-3xl border-zinc-800 sm:border shadow-2xl">
         
         {/* Header */}
-        <div className="text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/30">
-            <ShieldAlert className="h-7 w-7 text-blue-600 dark:text-blue-400" />
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Create Account
-          </h2>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Join the SUSU Management System
-          </p>
+        <div className="px-6 pt-6 pb-2 shrink-0 text-center">
+          <img className='h-10 mx-auto object-contain mb-2' src={logo} alt="Logo" />
+          <h2 className="text-xl font-bold text-white tracking-tight">Create Account</h2>
+          <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">SUSU Management System</p>
         </div>
 
-        {error && (
-          <div className="flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400 border border-red-100 dark:border-red-900/30">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <p>{error}</p>
-          </div>
-        )}
+        {/* Scroll-Disabled Content */}
+        <div className="flex-1 px-6 pb-6 overflow-y-auto no-scrollbar">
+          <style>{`.no-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+          
+          {error && (
+            <div className="mb-3 flex items-center gap-2 rounded-lg bg-red-900/20 p-2 text-[10px] text-red-400 border border-red-900/30">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <p>{error}</p>
+            </div>
+          )}
 
-        {/* Register Form */}
-        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Full Name
-              </label>
-              <div className="relative mt-2">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <UserIcon className="h-5 w-5 text-zinc-400" />
-                </div>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-blue-500 dark:focus:bg-zinc-900"
-                  placeholder="John Doe"
-                />
+              <label className={labelClasses}>Full Name</label>
+              <div className="relative">
+                <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClasses} placeholder="John Doe" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Email address
-              </label>
-              <div className="relative mt-2">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <Mail className="h-5 w-5 text-zinc-400" />
-                </div>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-blue-500 dark:focus:bg-zinc-900"
-                  placeholder="you@example.com"
-                />
+              <label className={labelClasses}>Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClasses} placeholder="you@example.com" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Phone Number (optional)
-              </label>
-              <div className="relative mt-2">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <Phone className="h-5 w-5 text-zinc-400" />
-                </div>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-blue-500 dark:focus:bg-zinc-900"
-                  placeholder="+233..."
+              <label className={labelClasses}>Phone Number (10 digits)</label>
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <input 
+                  type="tel" 
+                  inputMode="numeric"
+                  value={phone} 
+                  onChange={handlePhoneChange} 
+                  className={inputClasses} 
+                  placeholder="024XXXXXXX" 
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Password
-              </label>
-              <div className="relative mt-2">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <Lock className="h-5 w-5 text-zinc-400" />
+            <div className="grid grid-cols-2 gap-3">
+              {/* Password */}
+              <div>
+                <label className={labelClasses}>Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    required value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    className={inputClasses} 
+                    placeholder="••••" 
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-emerald-500 transition-colors">
+                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
                 </div>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-blue-500 dark:focus:bg-zinc-900"
-                  placeholder="••••••••"
-                />
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label className={labelClasses}>Confirm</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                  <input 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    required value={confirmPassword} 
+                    onChange={(e) => setConfirmPassword(e.target.value)} 
+                    className={inputClasses} 
+                    placeholder="••••" 
+                  />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-emerald-500 transition-colors">
+                    {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Confirm Password
-              </label>
-              <div className="relative mt-2">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <Lock className="h-5 w-5 text-zinc-400" />
-                </div>
-                <input
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-blue-500 dark:focus:bg-zinc-900"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-          </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group w-full flex justify-center items-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-900/20 hover:bg-emerald-500 active:scale-[0.98] transition-all mt-2"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Create Account <ArrowRight size={16} /></>}
+            </button>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="group flex w-full justify-center items-center gap-2 rounded-2xl bg-blue-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-500 hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-zinc-900 mt-6"
-          >
-            {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <>
-                Create Account
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </>
-            )}
-          </button>
-
-          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-            Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400">
-              Sign in
-            </Link>
-          </p>
-        </form>
+            <p className="text-center text-xs text-zinc-500 pt-1">
+              Already have an account? {' '}
+              <Link to="/login" className="font-bold text-emerald-500 hover:text-emerald-400">Sign in</Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   )
 }
+
+
+
+
+
+
