@@ -17,7 +17,7 @@ import { adminService } from '@/services/api/admin.service'
 export function SettingsPage() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(true)
-  const [success, setSuccess] = useState<string | null>(null)
+  const [success] = useState<string | null>(null)
 
   useEffect(() => {
     fetchSettings()

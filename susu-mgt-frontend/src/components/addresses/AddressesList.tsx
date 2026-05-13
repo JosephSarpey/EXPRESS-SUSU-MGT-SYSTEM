@@ -8,7 +8,6 @@ import { Plus } from 'lucide-react'
 export const AddressesList: React.FC = () => {
   const {
     addresses,
-    primaryAddress,
     isLoading,
     error,
     createAddress,

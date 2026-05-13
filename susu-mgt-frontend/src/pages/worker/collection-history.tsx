@@ -114,7 +114,7 @@ export function CollectionHistoryPage() {
                         </p>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant={tx.status === 'COMPLETED' ? 'success' : 'secondary'}>
+                        <Badge variant={tx.status === 'SUCCESS' ? 'success' : 'secondary'}>
                           {tx.status}
                         </Badge>
                       </td>
