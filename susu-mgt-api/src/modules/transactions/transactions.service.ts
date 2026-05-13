@@ -177,6 +177,27 @@ export class TransactionsService {
 
     const referenceId = generateReference('wd');
 
+    // Idempotency: if a similar pending withdrawal was just created, return it
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+    const existingPending = await this.prisma.transaction.findFirst({
+      where: {
+        userId: params.userId,
+        type: TransactionType.WITHDRAWAL,
+        status: TransactionStatus.PENDING,
+        amount: params.amount,
+        paymentMethod: params.method,
+        createdAt: { gte: oneMinuteAgo },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (existingPending) {
+      this.logger.log(
+        `Found existing pending withdrawal for user ${params.userId}, returning existing transaction ${existingPending.id}`,
+      );
+      return existingPending;
+    }
+
     // Determine payment gateway based on payment method
     const paymentGateway =
       params.method === 'CASH'
@@ -207,6 +228,66 @@ export class TransactionsService {
         message: `Your withdrawal request of ${wallet.currency} ${params.amount.toString()} via ${params.method} has been submitted and is pending approval.`,
       },
     });
+
+    // Notify all admins (in-app SYSTEM notification + EMAIL notification)
+    try {
+      const admins = await this.prisma.user.findMany({
+        where: { role: 'ADMIN' },
+        select: { id: true, email: true },
+      });
+
+      const adminSubject = 'New withdrawal request submitted';
+      const adminMessage = `User ${params.userId} requested a withdrawal of ${wallet.currency} ${params.amount.toString()} via ${params.method}. Reference: ${referenceId}`;
+
+      const notificationsData: Array<any> = [];
+      for (const admin of admins) {
+        notificationsData.push({
+          userId: admin.id,
+          type: 'SYSTEM',
+          subject: adminSubject,
+          message: adminMessage,
+        });
+        notificationsData.push({
+          userId: admin.id,
+          type: 'EMAIL',
+          subject: adminSubject,
+          message: adminMessage,
+        });
+      }
+
+      if (notificationsData.length > 0) {
+        await this.prisma.notification.createMany({ data: notificationsData });
+      }
+    } catch (err) {
+      this.logger.error(
+        'Failed to notify admins about withdrawal request',
+        err,
+      );
+    }
+
+    // Create an audit log entry for this withdrawal request
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          actorId: params.userId,
+          action: 'CREATE_WITHDRAWAL_REQUEST',
+          targetId: tx.id,
+          entityType: 'Transaction',
+          newValues: {
+            amount: params.amount.toString(),
+            currency: wallet.currency,
+            paymentMethod: params.method,
+            referenceId,
+            status: tx.status,
+          },
+        },
+      });
+    } catch (err) {
+      this.logger.error(
+        'Failed to create audit log for withdrawal request',
+        err,
+      );
+    }
 
     return tx;
   }

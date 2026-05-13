@@ -16,7 +16,8 @@ import {
   Bell,
   Clock,
   ArrowLeftRight,
-  Banknote
+  Banknote,
+  UserCog2
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuthStore, useNotificationsStore } from '@/store'
@@ -49,7 +50,7 @@ const sidebarItems: SidebarItem[] = [
   // Admin items
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, roles: ['ADMIN'] },
   { name: 'User Management', href: '/admin/user-management', icon: Users, roles: ['ADMIN'] },
-  { name: 'Worker Management', href: '/admin/worker-management', icon: Users, roles: ['ADMIN'] },
+  { name: 'Worker Management', href: '/admin/worker-management', icon: UserCog2, roles: ['ADMIN'] },
   { name: 'Wallet Management', href: '/admin/wallet-management', icon: Wallet, roles: ['ADMIN'] },
   { name: 'User Approval', href: '/admin/user-approval', icon: UserCheck, roles: ['ADMIN'] },
   { name: 'Transactions', href: '/admin/transaction-monitoring', icon: ArrowLeftRight, roles: ['ADMIN'] },
@@ -173,7 +174,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-zinc-100">SUSU MGT.</span>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 flex flex-col space-y-1 overflow-y-auto">
           {filteredItems.map((item) => (
             <Link
               key={item.href}

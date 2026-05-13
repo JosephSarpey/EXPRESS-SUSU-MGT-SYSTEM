@@ -9,7 +9,7 @@ import Footer from './Footer'
 import "./landingPage.css"
 const HomePage = () => {
   return (
-    <div>
+    <div className="landing-page-wrapper">
         <Header />
         <HeroSection />
         <AboutUs />
