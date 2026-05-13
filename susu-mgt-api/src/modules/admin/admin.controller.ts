@@ -82,6 +82,11 @@ export class AdminController {
     required: false,
     description: 'Items per page',
   })
+  @ApiQuery({
+    name: 'userId',
+    required: false,
+    description: 'Filter by specific user ID',
+  })
   @ApiResponse({
     status: 200,
     description: 'Transactions retrieved successfully',
@@ -93,10 +98,12 @@ export class AdminController {
   async getRecentTransactions(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('userId') userId?: string,
   ) {
     return this.adminService.getRecentTransactions({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
+      userId,
     });
   }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./landingPage.css";
 
 // 1. Improved Intersection Observer Hook
@@ -13,12 +13,10 @@ const useIntersection = (options = {}) => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
         setIsIntersecting(true);
-        // On large screens, we unobserve immediately once triggered 
-        // to lock the "visible" state and prevent flickering
         observer.unobserve(entry.target);
       }
     }, {
-      threshold: 0.05, // Trigger when only 5% is visible (better for large screens)
+      threshold: 0.05,
       ...options
     });
 
@@ -33,16 +31,15 @@ const useIntersection = (options = {}) => {
 };
 
 const LoanCard = ({ loan, index }: { loan: any; index: number }) => {
-  // Pass a small threshold here for individual cards
   const [ref, visible] = useIntersection({ threshold: 0.05 });
 
   return (
     <div
       ref={ref}
       className={`service-card ${visible ? "reveal-visible" : "reveal-hidden"}`}
-      style={{ 
+      style={{
         // Ensure delay only applies when becoming visible
-        transitionDelay: visible ? `${index * 100}ms` : '0ms' 
+        transitionDelay: visible ? `${index * 100}ms` : '0ms'
       }}
     >
       <div className="service-icon">
@@ -77,8 +74,8 @@ const Loans = () => {
   return (
     <section className="about-section" id="about">
       <div className="services-container">
-        <div 
-          ref={headerRef} 
+        <div
+          ref={headerRef}
           className={`section-header ${headerVisible ? "reveal-visible" : "reveal-hidden"}`}
         >
           <h2 className="section-title">Our Loans</h2>

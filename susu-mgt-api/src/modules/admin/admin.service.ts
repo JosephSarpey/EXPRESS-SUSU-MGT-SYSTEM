@@ -87,7 +87,7 @@ export class AdminService {
         database: 'ACTIVE',
         server: 'STABLE',
         workerNodes: activeWorkers > 0 ? 'HEALTHY' : 'IDLE',
-      }
+      },
     };
   }
 
@@ -123,7 +123,11 @@ export class AdminService {
     return createdUser;
   }
 
-  async getRecentTransactions(params?: { page: number; limit: number }) {
+  async getRecentTransactions(params?: {
+    page: number;
+    limit: number;
+    userId?: string;
+  }) {
     const page =
       params && Number.isFinite(params.page) && params.page > 0
         ? params.page
@@ -135,9 +139,14 @@ export class AdminService {
 
     const skip = (page - 1) * limit;
 
+    const where: Prisma.TransactionWhereInput = {
+      ...(params?.userId ? { userId: params.userId } : {}),
+    };
+
     const [total, data] = await Promise.all([
-      this.prisma.transaction.count(),
+      this.prisma.transaction.count({ where }),
       this.prisma.transaction.findMany({
+        where,
         include: {
           user: { select: { fullName: true, email: true } },
           worker: { select: { fullName: true, email: true } },
@@ -344,7 +353,13 @@ export class AdminService {
       where: { userId },
       include: {
         user: {
-          select: { id: true, fullName: true, email: true, role: true, status: true },
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            role: true,
+            status: true,
+          },
         },
       },
     });
@@ -560,7 +575,13 @@ export class AdminService {
         where,
         include: {
           user: {
-            select: { id: true, fullName: true, email: true, role: true, status: true },
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              role: true,
+              status: true,
+            },
           },
         },
         orderBy: { createdAt: 'desc' },
