@@ -26,4 +26,15 @@ export class WalletsController {
   getMyWallet(@CurrentUser() user: { id: string }) {
     return this.walletsService.getWalletByUserId(user.id);
   }
+
+  @Get('me/stats')
+  @UseGuards(SupabaseJwtGuard)
+  @ApiOperation({ summary: 'Get current user wallet stats' })
+  @ApiResponse({
+    status: 200,
+    description: 'Wallet stats retrieved successfully',
+  })
+  getMyWalletStats(@CurrentUser() user: { id: string }) {
+    return this.walletsService.getWalletStats(user.id);
+  }
 }

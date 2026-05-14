@@ -77,35 +77,48 @@ export class UsersService {
     return user;
   }
 
-  async findAll(): Promise<{
-    data: unknown[];
+  async findAll(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    search?: string;
+  }): Promise<{
+    data: any[];
     meta: { page: number; limit: number; total: number; totalPages: number };
-  }>;
-  async findAll(params: { page: number; limit: number }): Promise<{
-    data: unknown[];
-    meta: { page: number; limit: number; total: number; totalPages: number };
-  }>;
-  async findAll(params?: { page: number; limit: number }) {
-    const page =
-      params && Number.isFinite(params.page) && params.page > 0
-        ? params.page
-        : 1;
-    const limit =
-      params && Number.isFinite(params.limit) && params.limit > 0
-        ? Math.min(params.limit, 100)
-        : 20;
+  }> {
+    const page = Number(params?.page) || 1;
+    const limit = Number(params?.limit) || 20;
+    const status = params?.status;
+    const search = params?.search;
+
+    console.log(`[UsersService] findAll called with page=${page}, limit=${limit}, status=${status}, search=${search}`);
 
     const skip = (page - 1) * limit;
 
+    const where: any = {};
+    if (status) {
+      where.status = status;
+    }
+    if (search) {
+      where.OR = [
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { id: search.length === 36 ? search : undefined }, // Only match ID if it's a UUID
+      ].filter(f => f.id !== undefined || !('id' in f));
+    }
+
     const [total, data] = await Promise.all([
-      this.prisma.user.count(),
+      this.prisma.user.count({ where }),
       this.prisma.user.findMany({
+        where,
         include: { wallet: true },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
     ]);
+
+    console.log(`[UsersService] Found ${data.length} users (total: ${total}) for status=${status}`);
 
     return {
       data,

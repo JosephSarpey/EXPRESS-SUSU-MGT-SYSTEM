@@ -9,7 +9,9 @@ import {
   Loader2,
   CheckCircle2,
   Mail,
-  Phone
+  Phone,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -22,25 +24,37 @@ import { format } from 'date-fns'
 export function UserApprovalPage() {
   const navigate = useNavigate()
   const [pendingUsers, setPendingUsers] = useState<User[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [limit] = useState(10)
   const [isLoading, setIsLoading] = useState(true)
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
   const [remarks, setRemarks] = useState<string>('')
 
   useEffect(() => {
     fetchPendingUsers()
-  }, [])
+  }, [page, limit, search])
 
   const fetchPendingUsers = async () => {
     try {
       setIsLoading(true)
-      const data = await usersService.getAllUsers({ limit: 100 }) // Simple fetch all for now
-      setPendingUsers(data.data.filter(u => u.status === 'PENDING'))
+      const data = await usersService.getAllUsers({ 
+        page, 
+        limit, 
+        status: 'PENDING',
+        search: search || undefined
+      })
+      setPendingUsers(data.data)
+      setTotal(data.meta?.total || 0)
     } catch (err) {
       console.error('Error fetching pending users:', err)
     } finally {
       setIsLoading(false)
     }
   }
+
+  const totalPages = Math.ceil(total / limit)
 
   const handleApprove = async (id: string) => {
     try {
@@ -80,7 +94,7 @@ export function UserApprovalPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="warning" className="h-6 px-3 rounded-full">{pendingUsers.length} Pending</Badge>
+          <Badge variant="warning" className="h-6 px-3 rounded-full">{total} Pending</Badge>
         </div>
       </div>
 
@@ -89,7 +103,12 @@ export function UserApprovalPage() {
           <CardHeader className="p-4 md:p-6 border-b dark:border-zinc-800">
             <div className="relative w-full md:w-96">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-              <Input placeholder="Search pending users..." className="pl-10 h-11 rounded-full" />
+              <Input 
+                placeholder="Search pending users..." 
+                className="pl-10 h-11 rounded-full" 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -190,6 +209,33 @@ export function UserApprovalPage() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between p-6 border-t dark:border-zinc-800">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                  Page <span className="text-zinc-900 dark:text-zinc-100 font-bold">{page}</span> of <span className="text-zinc-900 dark:text-zinc-100 font-bold">{totalPages}</span>
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="rounded-xl"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="rounded-xl"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

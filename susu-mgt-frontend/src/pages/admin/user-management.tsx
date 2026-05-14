@@ -27,6 +27,7 @@ import { adminService } from '@/services/api/admin.service'
 import { User as UserType } from '@/store/auth-store'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
+import { CreateStaffDialog } from '@/components/admin/create-staff-dialog'
 
 export function UserManagementPage() {
   const navigate = useNavigate()
@@ -39,6 +40,7 @@ export function UserManagementPage() {
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null)
   const [userWallets, setUserWallets] = useState<Record<string, any>>({})
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -49,7 +51,7 @@ export function UserManagementPage() {
       setIsLoading(true)
       const data = await usersService.getAllUsers({ page, limit })
       setUsers(data.data)
-      setTotal(data.total)
+      setTotal(data.meta?.total || 0)
       
       // Fetch wallet info for these users
       const wallets: Record<string, any> = {}
@@ -150,7 +152,10 @@ export function UserManagementPage() {
             <p className="text-zinc-500 dark:text-zinc-400 mt-1">View and manage all registered accounts.</p>
           </div>
         </div>
-        <Button className="rounded-full">
+        <Button 
+          className="rounded-full"
+          onClick={() => setIsCreateDialogOpen(true)}
+        >
           <UserPlus className="mr-2 h-4 w-4" />
           Create Staff
         </Button>
@@ -419,6 +424,12 @@ export function UserManagementPage() {
           </Card>
         </div>
       )}
+      
+      <CreateStaffDialog 
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSuccess={() => fetchUsers()}
+      />
     </div>
   )
 }

@@ -34,7 +34,10 @@ export class NotificationsService {
 
     const skip = (page - 1) * limit;
 
-    const where: Prisma.NotificationWhereInput = { userId };
+    const where: Prisma.NotificationWhereInput = { 
+      userId,
+      type: 'SYSTEM'
+    };
 
     const [total, data] = await Promise.all([
       this.prisma.notification.count({ where }),
@@ -119,7 +122,7 @@ export class NotificationsService {
 
   async markAllAsRead(userId: string) {
     const result = await this.prisma.notification.updateMany({
-      where: { userId, readAt: null },
+      where: { userId, readAt: null, type: 'SYSTEM' },
       data: { readAt: new Date() },
     });
 
@@ -128,7 +131,7 @@ export class NotificationsService {
 
   async getUnreadCount(userId: string) {
     const count = await this.prisma.notification.count({
-      where: { userId, readAt: null },
+      where: { userId, readAt: null, type: 'SYSTEM' },
     });
 
     return { unreadCount: count };

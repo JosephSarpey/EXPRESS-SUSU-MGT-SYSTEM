@@ -229,6 +229,26 @@ export class WorkersService {
         });
       }
 
+      // Notify all workers about the cash deposit (except the one who recorded it)
+      const workers = await trx.user.findMany({
+        where: { 
+          role: 'WORKER',
+          id: { not: params.workerId }
+        },
+        select: { id: true },
+      });
+
+      for (const w of workers) {
+        await trx.notification.create({
+          data: {
+            userId: w.id,
+            type: 'SYSTEM',
+            subject: 'Team collection recorded',
+            message: `Worker ${worker?.fullName ?? 'Unknown'} collected ${wallet.currency} ${params.amount.toString()} from customer ${customer?.fullName ?? 'Unknown'}.`,
+          },
+        });
+      }
+
       return tx;
     });
   }
@@ -313,8 +333,14 @@ export class WorkersService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.TransactionWhereInput = {
-      workerId,
       type: TransactionType.WITHDRAWAL,
+      OR: [
+        { workerId },
+        {
+          paymentMethod: 'CASH',
+          status: { in: [TransactionStatus.PENDING, TransactionStatus.APPROVED] },
+        },
+      ],
     };
 
     const [total, data] = await Promise.all([
@@ -335,6 +361,50 @@ export class WorkersService {
         total,
         totalPages: Math.ceil(total / limit),
       },
+    };
+  }
+
+  async getWorkerStats(workerId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [todayCollections, todayAmountResult, pendingWithdrawals] =
+      await Promise.all([
+        // Today's collections count
+        this.prisma.transaction.count({
+          where: {
+            workerId,
+            type: TransactionType.DEPOSIT,
+            status: TransactionStatus.SUCCESS,
+            createdAt: { gte: today },
+          },
+        }),
+        // Today's collections volume
+        this.prisma.transaction.aggregate({
+          where: {
+            workerId,
+            type: TransactionType.DEPOSIT,
+            status: TransactionStatus.SUCCESS,
+            createdAt: { gte: today },
+          },
+          _sum: {
+            amount: true,
+          },
+        }),
+        // Pending withdrawals for this worker (unassigned cash)
+        this.prisma.transaction.count({
+          where: {
+            type: TransactionType.WITHDRAWAL,
+            paymentMethod: 'CASH',
+            status: { in: [TransactionStatus.PENDING, TransactionStatus.APPROVED] },
+          },
+        }),
+      ]);
+
+    return {
+      todayCollections,
+      todayAmount: todayAmountResult._sum.amount || 0,
+      pendingWithdrawals,
     };
   }
 }

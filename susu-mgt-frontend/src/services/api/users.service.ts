@@ -1,5 +1,6 @@
 import { apiClient } from './client'
 import { User } from '@/store/auth-store'
+import { PaginatedResponse } from './transactions.service'
 
 export interface UpdateUserDto {
   fullName?: string
@@ -14,6 +15,8 @@ export interface ApproveAccountDto {
 export interface PaginationParams {
   page?: number
   limit?: number
+  status?: string
+  search?: string
 }
 
 export const usersService = {
@@ -27,7 +30,7 @@ export const usersService = {
     return response.data
   },
 
-  getAllUsers: async (params: PaginationParams = {}): Promise<{ data: User[], total: number }> => {
+  getAllUsers: async (params: PaginationParams = {}): Promise<PaginatedResponse<User>> => {
     const response = await apiClient.get('/users', { params })
     return response.data
   },

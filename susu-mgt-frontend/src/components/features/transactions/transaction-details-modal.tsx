@@ -2,6 +2,7 @@ import { X, Receipt, Clock, CreditCard, Hash, Activity, FileText } from 'lucide-
 import { Transaction } from '@/services/api/transactions.service'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
+import { getTransactionStatusVariant } from '@/store'
 
 interface TransactionDetailsModalProps {
   transaction: Transaction | null
@@ -10,17 +11,6 @@ interface TransactionDetailsModalProps {
 
 export function TransactionDetailsModal({ transaction, onClose }: TransactionDetailsModalProps) {
   if (!transaction) return null
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'COMPLETED': return 'success'
-      case 'PENDING': return 'warning'
-      case 'FAILED':
-      case 'REJECTED':
-      case 'CANCELLED': return 'destructive'
-      default: return 'secondary'
-    }
-  }
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -68,7 +58,7 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
             <h3 className={`text-4xl font-extrabold mb-3 ${getTypeColor(transaction.type)}`}>
               GH₵ {Number(transaction.amount || 0).toFixed(2)}
             </h3>
-            <Badge variant={getStatusVariant(transaction.status)} className="px-3 py-1">
+            <Badge variant={getTransactionStatusVariant(transaction.status)} className="px-3 py-1">
               {transaction.status}
             </Badge>
           </div>

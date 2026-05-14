@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils'
 
 export function CustomerDashboard() {
   const [wallet, setWallet] = useState<WalletType | null>(null)
+  const [stats, setStats] = useState<{ totalDeposited: number, totalWithdrawn: number } | null>(null)
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -31,11 +32,13 @@ export function CustomerDashboard() {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true)
-        const [walletData, transactionsData] = await Promise.all([
+        const [walletData, statsData, transactionsData] = await Promise.all([
           walletsService.getMyWallet(),
+          walletsService.getWalletStats(),
           transactionsService.getMyTransactions({ limit: 5 })
         ])
         setWallet(walletData)
+        setStats(statsData)
         setRecentTransactions(transactionsData.data)
       } catch (err) {
         console.error('Error fetching dashboard data:', err)
@@ -130,7 +133,7 @@ export function CustomerDashboard() {
             <TrendingUp className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GH₵ {(wallet?.balance || 0).toLocaleString()}</div>
+            <div className="text-2xl font-bold">GH₵ {(stats?.totalDeposited || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
               Your cumulative savings to date
             </p>
@@ -144,7 +147,7 @@ export function CustomerDashboard() {
             <TrendingDown className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GH₵ 0.00</div>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">GH₵ {(stats?.totalWithdrawn || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
               Total funds withdrawn from wallet
             </p>

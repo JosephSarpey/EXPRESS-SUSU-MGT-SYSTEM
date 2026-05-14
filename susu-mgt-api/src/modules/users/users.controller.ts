@@ -68,6 +68,11 @@ export class UsersController {
     required: false,
     description: 'Items per page',
   })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Filter by account status',
+  })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   @ApiResponse({
     status: 403,
@@ -76,10 +81,14 @@ export class UsersController {
   async getAllUsers(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('status') status?: any,
+    @Query('search') search?: string,
   ) {
     return this.usersService.findAll({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
+      status,
+      search,
     });
   }
 

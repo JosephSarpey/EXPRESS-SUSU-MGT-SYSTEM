@@ -154,4 +154,15 @@ export class WorkersController {
       limit: limit ? parseInt(limit, 10) : 20,
     });
   }
+
+  @Get('stats')
+  @Roles('WORKER')
+  @ApiOperation({ summary: 'Get worker daily stats' })
+  @ApiResponse({
+    status: 200,
+    description: 'Worker stats retrieved successfully',
+  })
+  async getWorkerStats(@CurrentUser() user: { id: string }) {
+    return this.workersService.getWorkerStats(user.id);
+  }
 }

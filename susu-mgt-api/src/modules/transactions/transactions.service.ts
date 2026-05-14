@@ -265,6 +265,37 @@ export class TransactionsService {
       );
     }
 
+    // Notify workers if method is CASH
+    if (params.method === 'CASH') {
+      try {
+        const workers = await this.prisma.user.findMany({
+          where: { role: 'WORKER' },
+          select: { id: true },
+        });
+
+        const workerSubject = 'New cash withdrawal request';
+        const workerMessage = `A new cash withdrawal of ${wallet.currency} ${params.amount.toString()} has been requested. Reference: ${referenceId}`;
+
+        const workerNotifications = workers.map((worker) => ({
+          userId: worker.id,
+          type: 'SYSTEM' as const,
+          subject: workerSubject,
+          message: workerMessage,
+        }));
+
+        if (workerNotifications.length > 0) {
+          await this.prisma.notification.createMany({
+            data: workerNotifications,
+          });
+        }
+      } catch (err) {
+        this.logger.error(
+          'Failed to notify workers about cash withdrawal request',
+          err,
+        );
+      }
+    }
+
     // Create an audit log entry for this withdrawal request
     try {
       await this.prisma.auditLog.create({
@@ -550,6 +581,25 @@ export class TransactionsService {
         },
       });
 
+      // Notify workers if method is CASH
+      if (tx.paymentMethod === 'CASH') {
+        const workers = await trx.user.findMany({
+          where: { role: 'WORKER' },
+          select: { id: true },
+        });
+
+        const workerNotifications = workers.map((worker) => ({
+          userId: worker.id,
+          type: 'SYSTEM' as const,
+          subject: 'Approved cash withdrawal ready',
+          message: `A cash withdrawal of ${wallet.currency} ${tx.amount.toString()} has been approved and is ready for payout.`,
+        }));
+
+        if (workerNotifications.length > 0) {
+          await trx.notification.createMany({ data: workerNotifications });
+        }
+      }
+
       return updated;
     });
   }
@@ -700,6 +750,7 @@ export class TransactionsService {
         where: { id: tx.id },
         data: {
           status: TransactionStatus.SUCCESS,
+          workerId: params.workerId,
           balanceBefore,
           balanceAfter,
           description: `Cash payment completed by worker. ${params.remarks ?? ''}`,

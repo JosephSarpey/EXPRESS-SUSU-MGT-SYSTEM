@@ -13,5 +13,10 @@ export const walletsService = {
   getMyWallet: async (): Promise<Wallet> => {
     const response = await apiClient.get<Wallet>('/wallets/me')
     return response.data
+  },
+
+  getWalletStats: async () => {
+    const response = await apiClient.get('/wallets/me/stats')
+    return response.data
   }
 }

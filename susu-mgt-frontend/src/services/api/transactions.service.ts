@@ -31,6 +31,16 @@ export interface Transaction {
   updatedAt: string
 }
 
+export interface PaginatedResponse<T> {
+  data: T[]
+  meta: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
+
 export interface CreateWithdrawalDto {
   amount: number
   method: PaymentMethod
@@ -46,12 +56,12 @@ export interface PaginationParams {
 }
 
 export const transactionsService = {
-  getMyTransactions: async (params: PaginationParams = {}): Promise<{ data: Transaction[], total: number }> => {
+  getMyTransactions: async (params: PaginationParams = {}): Promise<PaginatedResponse<Transaction>> => {
     const response = await apiClient.get('/transactions/me', { params })
     return response.data
   },
 
-  getMyWithdrawals: async (params: PaginationParams = {}): Promise<{ data: Transaction[], total: number }> => {
+  getMyWithdrawals: async (params: PaginationParams = {}): Promise<PaginatedResponse<Transaction>> => {
     const response = await apiClient.get('/transactions/withdrawals', { params })
     return response.data
   },

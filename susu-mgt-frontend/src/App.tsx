@@ -26,6 +26,7 @@ import { WorkerDashboard } from './pages/worker/dashboard'
 import { ClockInOutPage } from './pages/worker/clock-in-out'
 import { CashDepositPage } from './pages/worker/cash-deposit'
 import { CollectionHistoryPage } from './pages/worker/collection-history'
+import { WithdrawalRequestPage } from './pages/worker/withdrawal-requests'
 
 // Admin Pages
 import { AdminDashboard } from './pages/admin/dashboard'
@@ -75,6 +76,7 @@ function App() {
               <Route path="/worker/clock-in-out" element={<ClockInOutPage />} />
               <Route path="/worker/cash-deposit" element={<CashDepositPage />} />
               <Route path="/worker/collection-history" element={<CollectionHistoryPage />} />
+              <Route path="/worker/withdrawal-requests" element={<WithdrawalRequestPage />} />
               <Route path="/worker/notifications" element={<NotificationsPage />} />
             </Route>
             

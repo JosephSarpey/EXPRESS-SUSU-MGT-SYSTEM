@@ -50,5 +50,10 @@ export const workersService = {
   getWorkerWithdrawals: async (params: PaginationParams = {}) => {
     const response = await apiClient.get('/workers/withdrawals', { params })
     return response.data
+  },
+  
+  getWorkerStats: async () => {
+    const response = await apiClient.get('/workers/stats')
+    return response.data
   }
 }

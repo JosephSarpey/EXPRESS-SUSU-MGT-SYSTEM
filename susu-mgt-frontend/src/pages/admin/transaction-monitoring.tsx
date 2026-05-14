@@ -1,102 +1,97 @@
-import { useEffect, useState } from 'react'
-import { 
-  ArrowLeft, 
-  Search, 
+import { useState } from "react";
+import {
+  ArrowLeft,
+  Search,
   Filter,
   Eye,
   ChevronLeft,
   ChevronRight,
   ArrowDownLeft,
   ArrowUpRight,
-  Monitor
-} from 'lucide-react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { adminService } from '@/services/api/admin.service'
-import { Transaction } from '@/services/api/transactions.service'
-import { format } from 'date-fns'
-import { useNavigate } from 'react-router-dom'
-import { TransactionDetailsModal } from '@/components/features/transactions/transaction-details-modal'
+  Monitor,
+} from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { useRecentTransactions } from "@/hooks/use-transactions";
+import {
+  TRANSACTION_TYPE,
+  getTransactionStatusVariant,
+  formatPaymentMethod,
+} from "@/store";
+import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { TransactionDetailsModal } from "@/components/features/transactions/transaction-details-modal";
+import { Transaction } from "@/services/api/transactions.service";
 
 export function TransactionMonitoringPage() {
-  const navigate = useNavigate()
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [limit] = useState(10)
-  const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [search, setSearch] = useState("");
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
 
-  useEffect(() => {
-    fetchTransactions()
-  }, [page, limit])
+  const { data, isLoading } = useRecentTransactions({ page, limit });
 
-  const fetchTransactions = async () => {
-    try {
-      setIsLoading(true)
-      const res = await adminService.getRecentTransactions({ page, limit })
-      setTransactions(res.data || [])
-      setTotal(res.total || 0)
-    } catch (err) {
-      console.error('Error fetching transactions:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const totalPages = Math.ceil(total / limit)
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'COMPLETED': return 'success'
-      case 'PENDING': return 'warning'
-      case 'FAILED':
-      case 'REJECTED':
-      case 'CANCELLED': return 'destructive'
-      default: return 'secondary'
-    }
-  }
+  const transactions = data?.data || [];
+  const total = data?.meta?.total || 0;
+  const totalPages = data?.meta?.totalPages || 0;
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'DEPOSIT':
-      case 'COLLECTION': return <ArrowDownLeft className="h-4 w-4 text-emerald-600" />
-      case 'WITHDRAWAL': return <ArrowUpRight className="h-4 w-4 text-amber-600" />
-      default: return <Monitor className="h-4 w-4 text-blue-600" />
+      case TRANSACTION_TYPE.DEPOSIT:
+      case TRANSACTION_TYPE.COLLECTION:
+        return <ArrowDownLeft className="h-4 w-4 text-emerald-600" />;
+      case TRANSACTION_TYPE.WITHDRAWAL:
+        return <ArrowUpRight className="h-4 w-4 text-amber-600" />;
+      default:
+        return <Monitor className="h-4 w-4 text-blue-600" />;
     }
-  }
+  };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="rounded-full"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">Transaction Monitoring</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1">Real-time view of all system transactions.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+              Transaction Monitoring
+            </h1>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+              Real-time view of all system transactions.
+            </p>
           </div>
         </div>
       </div>
 
-      <Card>
+      <Card className="border-none shadow-xl shadow-zinc-200/50 dark:shadow-none bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl">
         <CardHeader className="p-4 md:p-6 border-b dark:border-zinc-800">
           <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
             <div className="relative w-full md:w-96">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-              <Input 
-                placeholder="Search by ID or Reference..." 
-                className="pl-10 h-10 rounded-full" 
+              <Input
+                placeholder="Search by ID or Reference..."
+                className="pl-10 h-11 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-2 w-full md:w-auto">
-              <Button variant="outline" size="sm" className="rounded-full flex-1 md:flex-none">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-2xl flex-1 md:flex-none h-11 px-6"
+              >
                 <Filter className="mr-2 h-4 w-4" />
                 Filter
               </Button>
@@ -118,7 +113,7 @@ export function TransactionMonitoringPage() {
               </thead>
               <tbody className="divide-y dark:divide-zinc-800">
                 {isLoading ? (
-                  [1, 2, 3, 4, 5].map(i => (
+                  [1, 2, 3, 4, 5].map((i) => (
                     <tr key={i} className="animate-pulse">
                       <td colSpan={6} className="px-6 py-4">
                         <div className="h-10 bg-zinc-100 dark:bg-zinc-800 rounded-lg" />
@@ -126,21 +121,31 @@ export function TransactionMonitoringPage() {
                     </tr>
                   ))
                 ) : transactions.length > 0 ? (
-                  transactions.map((tx) => (
-                    <tr key={tx.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                  transactions.map((tx: any) => (
+                    <tr
+                      key={tx.id}
+                      className="group hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all duration-300"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                          <div className="h-10 w-10 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center group-hover:scale-110 transition-transform">
                             {getTypeIcon(tx.type)}
                           </div>
                           <div>
-                            <p className="font-bold text-zinc-900 dark:text-zinc-100">{tx.id.slice(0, 8).toUpperCase()}</p>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">{tx.paymentMethod.replace(/_/g, ' ')}</p>
+                            <p className="font-bold text-zinc-900 dark:text-zinc-100">
+                              {tx.id.slice(0, 8).toUpperCase()}
+                            </p>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                              {formatPaymentMethod(tx.paymentMethod)}
+                            </p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant="outline" className="font-bold uppercase text-[10px]">
+                        <Badge
+                          variant="outline"
+                          className="font-bold uppercase text-[10px] rounded-full border-zinc-200 dark:border-zinc-700"
+                        >
                           {tx.type}
                         </Badge>
                       </td>
@@ -150,18 +155,21 @@ export function TransactionMonitoringPage() {
                         </p>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant={getStatusVariant(tx.status)}>
+                        <Badge
+                          variant={getTransactionStatusVariant(tx.status)}
+                          className="rounded-full px-3 py-0.5"
+                        >
                           {tx.status}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400">
-                        {format(new Date(tx.createdAt), 'MMM dd, yyyy HH:mm')}
+                        {format(new Date(tx.createdAt), "MMM dd, yyyy HH:mm")}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="rounded-lg text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-xl text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                           onClick={() => setSelectedTransaction(tx)}
                         >
                           <Eye className="h-4 w-4" />
@@ -172,8 +180,13 @@ export function TransactionMonitoringPage() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-6 py-24 text-center">
-                      <Monitor className="h-12 w-12 text-zinc-200 dark:text-zinc-800 mx-auto mb-4" />
-                      <p className="text-zinc-500 dark:text-zinc-400">No transactions found.</p>
+                      <Monitor className="h-16 w-16 text-zinc-200 dark:text-zinc-800 mx-auto mb-6" />
+                      <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                        No transactions found
+                      </h3>
+                      <p className="text-zinc-500 dark:text-zinc-400">
+                        There are no transactions to display.
+                      </p>
                     </td>
                   </tr>
                 )}
@@ -184,22 +197,29 @@ export function TransactionMonitoringPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between p-6 border-t dark:border-zinc-800">
               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                Page <span className="text-zinc-900 dark:text-zinc-100 font-bold">{page}</span> of <span className="text-zinc-900 dark:text-zinc-100 font-bold">{totalPages}</span>
+                Page{" "}
+                <span className="text-zinc-900 dark:text-zinc-100 font-bold">
+                  {page}
+                </span>{" "}
+                of{" "}
+                <span className="text-zinc-900 dark:text-zinc-100 font-bold">
+                  {totalPages}
+                </span>
               </p>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                   className="rounded-xl"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
                   className="rounded-xl"
                 >
@@ -211,10 +231,10 @@ export function TransactionMonitoringPage() {
         </CardContent>
       </Card>
 
-      <TransactionDetailsModal 
-        transaction={selectedTransaction} 
-        onClose={() => setSelectedTransaction(null)} 
+      <TransactionDetailsModal
+        transaction={selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
       />
     </div>
-  )
+  );
 }

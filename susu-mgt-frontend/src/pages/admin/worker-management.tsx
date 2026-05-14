@@ -45,7 +45,7 @@ export function WorkerManagementPage() {
       setIsLoading(true)
       const res = await adminService.getWorkerSessions({ page, limit })
       setSessions(res.data || [])
-      setTotal(res.total || 0)
+      setTotal(res.meta?.total || 0)
     } catch (err) {
       console.error('Error fetching worker sessions:', err)
     } finally {

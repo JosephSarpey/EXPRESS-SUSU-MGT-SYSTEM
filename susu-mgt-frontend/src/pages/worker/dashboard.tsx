@@ -7,7 +7,8 @@ import {
   AlertCircle,
   ArrowRight,
   TrendingUp,
-  Calendar
+  Calendar,
+  Banknote
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,17 +25,13 @@ export function WorkerDashboard() {
     const fetchWorkerData = async () => {
       try {
         setIsLoading(true)
-        const [sessionData, collectionsData] = await Promise.all([
+        const [sessionData, statsData] = await Promise.all([
           workersService.getActiveSession(),
-          workersService.getWorkerCollections({ limit: 1 })
+          workersService.getWorkerStats()
         ])
-        console.log('Dashboard session data:', sessionData)
+        console.log('Dashboard data:', { sessionData, statsData })
         setSession(sessionData)
-        // Set some mock stats for now since we don't have a dedicated stats endpoint for workers yet
-        setStats({
-          todayCollections: collectionsData.total || 0,
-          todayAmount: collectionsData.data.reduce((acc: number, curr: any) => acc + Number(curr.amount), 0)
-        })
+        setStats(statsData)
       } catch (err) {
         console.error('Error fetching worker data:', err)
       } finally {
@@ -100,7 +97,7 @@ export function WorkerDashboard() {
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Session Card */}
         <Card className={cn(
           "border-none shadow-lg transition-all",
@@ -137,8 +134,7 @@ export function WorkerDashboard() {
             </p>
           </CardContent>
         </Card>
-
-        {/* Total Amount Today */}
+        {/* Today's Volume */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Today's Volume</CardTitle>
@@ -148,6 +144,20 @@ export function WorkerDashboard() {
             <div className="text-3xl font-bold">GH₵ {(stats?.todayAmount || 0).toLocaleString()}</div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
               Total cash collected today
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Pending Payouts */}
+        <Card className="hover:border-amber-200 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Pending Payouts</CardTitle>
+            <Banknote className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats?.pendingWithdrawals || 0}</div>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
+              Withdrawals awaiting cash payment
             </p>
           </CardContent>
         </Card>

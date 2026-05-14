@@ -46,6 +46,7 @@ const sidebarItems: SidebarItem[] = [
   { name: 'Clock In/Out', href: '/worker/clock-in-out', icon: Clock, roles: ['WORKER'] },
   { name: 'Cash Deposit', href: '/worker/cash-deposit', icon: Wallet, roles: ['WORKER'] },
   { name: 'Collections', href: '/worker/collection-history', icon: History, roles: ['WORKER'] },
+  { name: 'Withdrawal Requests', href: '/worker/withdrawal-requests', icon: Banknote, roles: ['WORKER'] },
 
   // Admin items
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, roles: ['ADMIN'] },
@@ -110,7 +111,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       intervalId = window.setInterval(() => {
         if (document.hidden) return
         fetchUnreadCount()
-      }, 60_000)
+      }, 30_000)
     }
 
     const stop = () => {
