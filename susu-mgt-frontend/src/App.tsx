@@ -18,8 +18,10 @@ import { CustomerDashboard } from './pages/customer/dashboard'
 import { DepositPage } from './pages/customer/deposit'
 import { WithdrawPage } from './pages/customer/withdraw'
 import { TransactionsPage } from './pages/customer/transactions'
-import { ProfilePage } from './pages/customer/profile'
 import { AddressesPage } from './pages/customer/addresses'
+
+// Shared Pages
+import { ProfilePage } from './components/features/profile/profile-page'
 
 // Worker Pages
 import { WorkerDashboard } from './pages/worker/dashboard'
@@ -77,6 +79,7 @@ function App() {
               <Route path="/worker/cash-deposit" element={<CashDepositPage />} />
               <Route path="/worker/collection-history" element={<CollectionHistoryPage />} />
               <Route path="/worker/withdrawal-requests" element={<WithdrawalRequestPage />} />
+              <Route path="/worker/profile" element={<ProfilePage />} />
               <Route path="/worker/notifications" element={<NotificationsPage />} />
             </Route>
             
@@ -93,6 +96,7 @@ function App() {
               <Route path="/admin/withdrawal-requests" element={<WithdrawalRequestsPage />} />
               <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
               <Route path="/admin/settings" element={<SettingsPage />} />
+              <Route path="/admin/profile" element={<ProfilePage />} />
               <Route path="/admin/notifications" element={<NotificationsPage />} />
             </Route>
           </Route>

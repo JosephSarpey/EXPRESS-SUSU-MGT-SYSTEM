@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { adminService } from '@/services/api/admin.service'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
+import { useDebounce } from '@/hooks/use-debounce'
 
 export function WalletsPage() {
   const navigate = useNavigate()
@@ -27,14 +28,25 @@ export function WalletsPage() {
   const [search, setSearch] = useState('')
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
 
+  const debouncedSearch = useDebounce(search, 300)
+
+  // Reset page to 1 on search change
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch])
+
   useEffect(() => {
     fetchWallets()
-  }, [page, limit, search])
+  }, [page, limit, debouncedSearch])
 
   const fetchWallets = async () => {
     try {
       setIsLoading(true)
-      const res = await adminService.listWallets({ page, limit, search })
+      const res = await adminService.listWallets({ 
+        page, 
+        limit, 
+        search: debouncedSearch || undefined 
+      })
       setWallets(res.data || [])
       setTotal(res.meta?.total || 0)
     } catch (err) {

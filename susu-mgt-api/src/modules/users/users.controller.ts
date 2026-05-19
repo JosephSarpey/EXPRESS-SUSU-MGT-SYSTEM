@@ -42,7 +42,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'WORKER')
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully' })
@@ -56,7 +56,7 @@ export class UsersController {
   }
 
   @Get()
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'WORKER')
   @ApiOperation({ summary: 'Get all users' })
   @ApiQuery({
     name: 'page',
@@ -83,12 +83,14 @@ export class UsersController {
     @Query('limit') limit?: string,
     @Query('status') status?: any,
     @Query('search') search?: string,
+    @Query('role') role?: any,
   ) {
     return this.usersService.findAll({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
       status,
       search,
+      role,
     });
   }
 

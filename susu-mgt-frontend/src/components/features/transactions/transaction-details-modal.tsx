@@ -1,4 +1,4 @@
-import { X, Receipt, Clock, CreditCard, Hash, Activity, FileText } from 'lucide-react'
+import { X, Receipt, Clock, CreditCard, Hash, Activity, FileText, User, Users, MapPin } from 'lucide-react'
 import { Transaction } from '@/services/api/transactions.service'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
@@ -62,6 +62,62 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
               {transaction.status}
             </Badge>
           </div>
+
+          {/* User & Worker Info */}
+          {(transaction.user || transaction.worker) && (
+            <div className="space-y-3">
+              {transaction.user && (
+                <div className="flex items-start gap-3 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
+                  <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
+                    {transaction.user.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Customer</span>
+                    </div>
+                    <p className="font-bold text-zinc-900 dark:text-zinc-100 truncate">{transaction.user.fullName}</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{transaction.user.email}</p>
+                    {transaction.user.addresses && transaction.user.addresses.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-blue-100 dark:border-blue-900/30 space-y-1">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block mb-1">
+                          Addresses
+                        </span>
+                        {transaction.user.addresses.map((addr, idx) => (
+                          <div key={idx} className="flex items-start gap-1.5 text-xs text-zinc-700 dark:text-zinc-300">
+                            <MapPin className="h-3.5 w-3.5 mt-0.5 text-blue-500 dark:text-blue-400 shrink-0" />
+                            <span className="leading-tight">
+                              {[addr.street, addr.city, addr.state, addr.zipCode].filter(Boolean).join(', ')}
+                              {addr.isPrimary && (
+                                <span className="text-[8px] ml-1.5 px-1 py-0.2 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded font-bold uppercase tracking-wider">
+                                  Primary
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {transaction.worker && (
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30">
+                  <div className="h-10 w-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                    {transaction.worker.fullName?.charAt(0)?.toUpperCase() || 'W'}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Worker</span>
+                    </div>
+                    <p className="font-bold text-zinc-900 dark:text-zinc-100 truncate">{transaction.worker.fullName}</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{transaction.worker.email}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

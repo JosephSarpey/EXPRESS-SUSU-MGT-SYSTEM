@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Search,
@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuditLogs } from "@/hooks/use-transactions";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export function AuditLogsPage() {
   const navigate = useNavigate();
@@ -23,7 +24,18 @@ export function AuditLogsPage() {
   const [search, setSearch] = useState("");
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
-  const { data, isLoading } = useAuditLogs({ page, limit });
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Reset page to 1 on search change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  const { data, isLoading } = useAuditLogs({ 
+    page, 
+    limit, 
+    search: debouncedSearch || undefined 
+  });
 
   const logs = data?.data || [];
   const total = data?.meta?.total || 0;
@@ -226,7 +238,8 @@ export function AuditLogsPage() {
                 of{" "}
                 <span className="text-zinc-900 dark:text-zinc-100 font-bold">
                   {totalPages}
-                </span>
+                </span>{" "}
+                (<span className="font-bold">{total}</span> total)
               </p>
               <div className="flex items-center gap-2">
                 <Button

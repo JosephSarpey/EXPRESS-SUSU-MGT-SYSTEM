@@ -17,6 +17,7 @@ export interface PaginationParams {
   limit?: number
   status?: string
   search?: string
+  role?: string
 }
 
 export const usersService = {

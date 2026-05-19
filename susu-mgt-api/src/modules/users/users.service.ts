@@ -82,6 +82,7 @@ export class UsersService {
     limit?: number;
     status?: string;
     search?: string;
+    role?: string;
   }): Promise<{
     data: any[];
     meta: { page: number; limit: number; total: number; totalPages: number };
@@ -90,14 +91,16 @@ export class UsersService {
     const limit = Number(params?.limit) || 20;
     const status = params?.status;
     const search = params?.search;
-
-    console.log(`[UsersService] findAll called with page=${page}, limit=${limit}, status=${status}, search=${search}`);
+    const role = params?.role;
 
     const skip = (page - 1) * limit;
 
     const where: any = {};
     if (status) {
       where.status = status;
+    }
+    if (role) {
+      where.role = role;
     }
     if (search) {
       where.OR = [
@@ -117,8 +120,6 @@ export class UsersService {
         take: limit,
       }),
     ]);
-
-    console.log(`[UsersService] Found ${data.length} users (total: ${total}) for status=${status}`);
 
     return {
       data,

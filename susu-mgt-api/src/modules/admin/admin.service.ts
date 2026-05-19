@@ -127,6 +127,9 @@ export class AdminService {
     page: number;
     limit: number;
     userId?: string;
+    search?: string;
+    type?: string;
+    status?: string;
   }) {
     const page =
       params && Number.isFinite(params.page) && params.page > 0
@@ -141,7 +144,20 @@ export class AdminService {
 
     const where: Prisma.TransactionWhereInput = {
       ...(params?.userId ? { userId: params.userId } : {}),
+      ...(params?.type ? { type: params.type as any } : {}),
+      ...(params?.status ? { status: params.status as any } : {}),
     };
+
+    if (params?.search) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.search.trim());
+      where.OR = [
+        { description: { contains: params.search, mode: 'insensitive' } },
+        { referenceId: { contains: params.search, mode: 'insensitive' } },
+        { user: { fullName: { contains: params.search, mode: 'insensitive' } } },
+        { user: { email: { contains: params.search, mode: 'insensitive' } } },
+        ...(isUuid ? [{ id: params.search.trim() }] : []),
+      ];
+    }
 
     const [total, data] = await Promise.all([
       this.prisma.transaction.count({ where }),
@@ -168,7 +184,7 @@ export class AdminService {
     };
   }
 
-  async getAuditLogs(params?: { page: number; limit: number }) {
+  async getAuditLogs(params?: { page: number; limit: number; search?: string }) {
     const page =
       params && Number.isFinite(params.page) && params.page > 0
         ? params.page
@@ -180,9 +196,22 @@ export class AdminService {
 
     const skip = (page - 1) * limit;
 
+    const where: Prisma.AuditLogWhereInput = {};
+
+    if (params?.search) {
+      where.OR = [
+        { action: { contains: params.search, mode: 'insensitive' } },
+        { entityType: { contains: params.search, mode: 'insensitive' } },
+        { targetId: { contains: params.search, mode: 'insensitive' } },
+        { actor: { fullName: { contains: params.search, mode: 'insensitive' } } },
+        { actor: { email: { contains: params.search, mode: 'insensitive' } } },
+      ];
+    }
+
     const [total, data] = await Promise.all([
-      this.prisma.auditLog.count(),
+      this.prisma.auditLog.count({ where }),
       this.prisma.auditLog.findMany({
+        where,
         include: {
           actor: { select: { fullName: true, email: true, role: true } },
         },
@@ -207,6 +236,7 @@ export class AdminService {
     page: number;
     limit: number;
     workerId?: string;
+    search?: string;
   }) {
     const page =
       params && Number.isFinite(params.page) && params.page > 0
@@ -226,6 +256,19 @@ export class AdminService {
         ? { workerId: params.workerId }
         : { workerId: { not: null } }),
     };
+
+    if (params?.search) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.search.trim());
+      where.OR = [
+        { description: { contains: params.search, mode: 'insensitive' } },
+        { referenceId: { contains: params.search, mode: 'insensitive' } },
+        { user: { fullName: { contains: params.search, mode: 'insensitive' } } },
+        { user: { email: { contains: params.search, mode: 'insensitive' } } },
+        { worker: { fullName: { contains: params.search, mode: 'insensitive' } } },
+        { worker: { email: { contains: params.search, mode: 'insensitive' } } },
+        ...(isUuid ? [{ id: params.search.trim() }] : []),
+      ];
+    }
 
     const [total, data] = await Promise.all([
       this.prisma.transaction.count({ where }),
@@ -303,6 +346,7 @@ export class AdminService {
     limit: number;
     userId?: string;
     workerId?: string;
+    search?: string;
   }) {
     const page =
       params && Number.isFinite(params.page) && params.page > 0
@@ -320,6 +364,17 @@ export class AdminService {
       ...(params?.userId ? { userId: params.userId } : {}),
       ...(params?.workerId ? { workerId: params.workerId } : {}),
     };
+
+    if (params?.search) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.search.trim());
+      where.OR = [
+        { description: { contains: params.search, mode: 'insensitive' } },
+        { referenceId: { contains: params.search, mode: 'insensitive' } },
+        { user: { fullName: { contains: params.search, mode: 'insensitive' } } },
+        { user: { email: { contains: params.search, mode: 'insensitive' } } },
+        ...(isUuid ? [{ id: params.search.trim() }] : []),
+      ];
+    }
 
     const [total, data] = await Promise.all([
       this.prisma.transaction.count({ where }),
@@ -472,6 +527,7 @@ export class AdminService {
     page: number;
     limit: number;
     status?: string;
+    search?: string;
   }) {
     const page =
       params && Number.isFinite(params.page) && params.page > 0
@@ -487,6 +543,15 @@ export class AdminService {
     const where: Prisma.WorkerSessionWhereInput = {
       ...(params?.status ? { status: params.status as any } : {}),
     };
+
+    if (params?.search) {
+      where.worker = {
+        OR: [
+          { email: { contains: params.search, mode: 'insensitive' } },
+          { fullName: { contains: params.search, mode: 'insensitive' } },
+        ],
+      };
+    }
 
     const [total, data] = await Promise.all([
       this.prisma.workerSession.count({ where }),

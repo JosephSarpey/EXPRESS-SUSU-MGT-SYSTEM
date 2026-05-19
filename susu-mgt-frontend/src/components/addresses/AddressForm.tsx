@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Address, CreateAddressDto, UpdateAddressDto } from '@/services/api/addresses.service'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Loader2 } from 'lucide-react'
 
 interface AddressFormProps {
   address?: Address
@@ -59,97 +62,108 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-1">
-          Street Address
-        </label>
-        <input
-          type="text"
-          id="street"
-          name="street"
-          value={formData.street}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="123 Main Street"
-        />
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="space-y-1.5 md:col-span-2">
+          <label htmlFor="street" className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+            Street Address
+          </label>
+          <Input
+            type="text"
+            id="street"
+            name="street"
+            value={formData.street}
+            onChange={handleChange}
+            placeholder="123 Main Street"
+            className="w-full bg-white dark:bg-zinc-950"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="city" className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+            City
+          </label>
+          <Input
+            type="text"
+            id="city"
+            name="city"
+            value={formData.city}
+            onChange={handleChange}
+            placeholder="Accra"
+            className="w-full bg-white dark:bg-zinc-950"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="state" className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+            State/Region
+          </label>
+          <Input
+            type="text"
+            id="state"
+            name="state"
+            value={formData.state}
+            onChange={handleChange}
+            placeholder="Greater Accra"
+            className="w-full bg-white dark:bg-zinc-950"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="zipCode" className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+            Postal/Zip Code
+          </label>
+          <Input
+            type="text"
+            id="zipCode"
+            name="zipCode"
+            value={formData.zipCode}
+            onChange={handleChange}
+            placeholder="00233"
+            className="w-full bg-white dark:bg-zinc-950"
+          />
+        </div>
       </div>
 
-      <div>
-        <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-          City
-        </label>
-        <input
-          type="text"
-          id="city"
-          name="city"
-          value={formData.city}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Accra"
-        />
+      <div className="flex items-center gap-3 pt-2">
+        <div className="relative flex items-start">
+          <div className="flex h-6 items-center">
+            <input
+              type="checkbox"
+              id="isPrimary"
+              name="isPrimary"
+              checked={formData.isPrimary}
+              onChange={handleChange}
+              className="h-5 w-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900 dark:checked:bg-blue-600 transition-colors"
+            />
+          </div>
+          <div className="ml-3 text-sm leading-6">
+            <label htmlFor="isPrimary" className="font-medium text-zinc-900 dark:text-zinc-100 cursor-pointer">
+              Set as primary address
+            </label>
+            <p className="text-zinc-500 dark:text-zinc-400">Make this your default address for all activities.</p>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-          State/Region
-        </label>
-        <input
-          type="text"
-          id="state"
-          name="state"
-          value={formData.state}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Greater Accra"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">
-          Postal/Zip Code
-        </label>
-        <input
-          type="text"
-          id="zipCode"
-          name="zipCode"
-          value={formData.zipCode}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="00233"
-        />
-      </div>
-
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="isPrimary"
-          name="isPrimary"
-          checked={formData.isPrimary}
-          onChange={handleChange}
-          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-        />
-        <label htmlFor="isPrimary" className="ml-2 block text-sm text-gray-700">
-          Set as primary address
-        </label>
-      </div>
-
-      <div className="flex gap-3 pt-4">
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Saving...' : (address ? 'Update Address' : 'Add Address')}
-        </button>
-        <button
+      <div className="flex gap-3 pt-6 border-t dark:border-zinc-800">
+        <Button
           type="button"
+          variant="outline"
           onClick={onCancel}
           disabled={isLoading}
-          className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1"
         >
           Cancel
-        </button>
+        </Button>
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="flex-1"
+        >
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {address ? 'Update Address' : 'Save Address'}
+        </Button>
       </div>
     </form>
   )

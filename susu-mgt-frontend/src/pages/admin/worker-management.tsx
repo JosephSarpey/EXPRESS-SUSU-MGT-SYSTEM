@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { WorkerCollectionsTab } from '@/components/admin/worker-collections-tab'
+import { useDebounce } from '@/hooks/use-debounce'
 
 export function WorkerManagementPage() {
   const navigate = useNavigate()
@@ -34,16 +35,27 @@ export function WorkerManagementPage() {
   const [activeTab, setActiveTab] = useState<'sessions' | 'collections'>('sessions')
   const [selectedSession, setSelectedSession] = useState<any | null>(null)
 
+  const debouncedSearch = useDebounce(search, 300)
+
+  // Reset page to 1 on search change
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch])
+
   useEffect(() => {
     if (activeTab === 'sessions') {
       fetchSessions()
     }
-  }, [page, limit, activeTab])
+  }, [page, limit, activeTab, debouncedSearch])
 
   const fetchSessions = async () => {
     try {
       setIsLoading(true)
-      const res = await adminService.getWorkerSessions({ page, limit })
+      const res = await adminService.getWorkerSessions({ 
+        page, 
+        limit,
+        search: debouncedSearch || undefined
+      })
       setSessions(res.data || [])
       setTotal(res.meta?.total || 0)
     } catch (err) {

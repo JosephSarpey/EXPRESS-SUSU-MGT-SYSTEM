@@ -7,6 +7,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Ip,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -41,11 +42,13 @@ export class WorkersController {
   async clockIn(
     @CurrentUser() user: { id: string },
     @Body() clockInDto: ClockInDto,
+    @Ip() ip: string,
   ) {
+    const finalIp = clockInDto.ipAddress === 'detected-by-server' ? ip : (clockInDto.ipAddress || ip);
     return this.workersService.clockIn(
       user.id,
       clockInDto.deviceInfo,
-      clockInDto.ipAddress,
+      finalIp,
     );
   }
 
@@ -92,10 +95,12 @@ export class WorkersController {
     @CurrentUser() user: { id: string },
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('search') search?: string,
   ) {
     return this.workersService.listWorkerCollections(user.id, {
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
+      search,
     });
   }
 
@@ -148,10 +153,12 @@ export class WorkersController {
     @CurrentUser() user: { id: string },
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('search') search?: string,
   ) {
     return this.workersService.listWorkerWithdrawals(user.id, {
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
+      search,
     });
   }
 

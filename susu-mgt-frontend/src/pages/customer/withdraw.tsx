@@ -24,10 +24,21 @@ export function WithdrawPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
+  const [minWithdrawalAmount] = useState(() => {
+    const val = localStorage.getItem("susu_min_withdrawal_amount")
+    return val ? Number(val) : 50.00
+  })
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+    const enteredAmount = Number(amount)
+    if (!amount || isNaN(enteredAmount) || enteredAmount <= 0) {
       setError('Please enter a valid amount')
+      return
+    }
+
+    if (enteredAmount < minWithdrawalAmount) {
+      setError(`The minimum allowed withdrawal is GH₵ ${minWithdrawalAmount.toFixed(2)}`)
       return
     }
 
@@ -36,7 +47,7 @@ export function WithdrawPage() {
       setError(null)
       
       await transactionsService.createWithdrawal({
-        amount: Number(amount),
+        amount: enteredAmount,
         method
       })
       
@@ -137,13 +148,13 @@ export function WithdrawPage() {
                   onChange={(e) => setAmount(e.target.value)}
                   className="pl-14 text-lg font-bold"
                   step="0.01"
-                  min="1"
+                  min={minWithdrawalAmount}
                   required
                   disabled={isSubmitting}
                 />
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 ml-1">
-                Funds will be deducted from your available balance.
+                The minimum withdrawal amount is GH₵ {minWithdrawalAmount.toFixed(2)}. Funds will be deducted from your available balance.
               </p>
             </div>
 

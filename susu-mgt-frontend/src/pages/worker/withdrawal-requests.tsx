@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -10,8 +10,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  MapPin,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import {
 import { format } from "date-fns";
 import { TransactionDetailsModal } from "@/components/features/transactions/transaction-details-modal";
 import { Transaction } from "@/services/api/transactions.service";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export function WithdrawalRequestPage() {
   const navigate = useNavigate();
@@ -36,7 +38,18 @@ export function WithdrawalRequestPage() {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
 
-  const { data, isLoading } = useWorkerWithdrawals({ page, limit });
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Reset page to 1 on search change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  const { data, isLoading } = useWorkerWithdrawals({ 
+    page, 
+    limit, 
+    search: debouncedSearch || undefined 
+  });
   const confirmMutation = useConfirmWithdrawal();
 
   const handleConfirmPayment = async (id: string) => {
@@ -53,7 +66,6 @@ export function WithdrawalRequestPage() {
   };
 
   const withdrawals = data?.data || [];
-  const total = data?.meta?.total || 0;
   const totalPages = data?.meta?.totalPages || 0;
 
   return (
@@ -133,11 +145,25 @@ export function WithdrawalRequestPage() {
                             </div>
                             <div>
                               <p className="font-bold text-zinc-900 dark:text-zinc-100">
-                                {req.id.slice(0, 8).toUpperCase()}
+                                {req.user?.fullName ||
+                                  req.id.slice(0, 8).toUpperCase()}
                               </p>
                               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                User: {req.userId.slice(0, 8)}
+                                {req.user?.email ||
+                                  `User: ${req.userId.slice(0, 8)}`}
                               </p>
+                              {req.user?.addresses && req.user.addresses.length > 0 && (
+                                <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-semibold flex items-center gap-1">
+                                  <MapPin className="h-3 w-3 shrink-0" />
+                                  <span>
+                                    {(() => {
+                                      const primary = req.user.addresses.find((addr: any) => addr.isPrimary);
+                                      const addr = primary || req.user.addresses[0];
+                                      return [addr.street, addr.city, addr.state].filter(Boolean).join(', ');
+                                    })()}
+                                  </span>
+                                </p>
+                              )}
                             </div>
                           </div>
                         </td>

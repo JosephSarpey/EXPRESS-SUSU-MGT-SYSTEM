@@ -30,7 +30,6 @@ export function ClockInOutPage() {
     try {
       setIsLoading(true)
       const data = await workersService.getActiveSession()
-      console.log('Session data:', data)
       setSession(data)
     } catch (err) {
       console.error('Error fetching session:', err)
@@ -54,7 +53,6 @@ export function ClockInOutPage() {
           deviceInfo: navigator.userAgent,
           ipAddress: 'detected-by-server'
         })
-        console.log('Clock in response:', data)
         setSession(data)
       }
     } catch (err: any) {
@@ -148,8 +146,8 @@ export function ClockInOutPage() {
                   <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">Clock In Time</p>
                   <p className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100">
                     {(() => {
-                      if (!session.clockInTime) return 'N/A'
-                      const date = new Date(session.clockInTime)
+                      if (!session.loginTime) return 'N/A'
+                      const date = new Date(session.loginTime)
                       return isNaN(date.getTime()) ? 'Invalid time' : format(date, 'hh:mm a')
                     })()}
                   </p>

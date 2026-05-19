@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   ArrowLeft, 
@@ -16,10 +16,12 @@ import { Input } from '@/components/ui/input'
 import { workersService } from '@/services/api/workers.service'
 import { usersService } from '@/services/api/users.service'
 import { cn } from '@/lib/utils'
+import { useDebounce } from '@/hooks/use-debounce'
 
 export function CashDepositPage() {
   const navigate = useNavigate()
-  const [userId, setUserId] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [isSearching, setIsSearching] = useState(false)
@@ -28,27 +30,34 @@ export function CashDepositPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  const handleSearchUser = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!userId) return
+  const debouncedSearch = useDebounce(searchQuery, 300)
 
-    try {
-      setIsSearching(true)
-      setError(null)
-      setFoundUser(null)
-      
-      const user = await usersService.getUserById(userId)
-      if (user.role !== 'CUSTOMER') {
-        throw new Error('User found is not a customer.')
+  useEffect(() => {
+    const performSearch = async () => {
+      if (!debouncedSearch) {
+        setSearchResults([])
+        return
       }
-      setFoundUser(user)
-    } catch (err: any) {
-      console.error('Error searching user:', err)
-      setError(err.response?.status === 404 ? 'User not found. Please verify the ID.' : (err.message || 'Failed to search user.'))
-    } finally {
-      setIsSearching(false)
+
+      try {
+        setIsSearching(true)
+        setError(null)
+        const res = await usersService.getAllUsers({
+          search: debouncedSearch,
+          role: 'CUSTOMER',
+          limit: 10,
+        })
+        setSearchResults(res.data)
+      } catch (err: any) {
+        console.error('Error fetching customers:', err)
+        setError('Failed to search customers.')
+      } finally {
+        setIsSearching(false)
+      }
     }
-  }
+
+    performSearch()
+  }, [debouncedSearch])
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,7 +97,8 @@ export function CashDepositPage() {
             setSuccess(false)
             setAmount('')
             setFoundUser(null)
-            setUserId('')
+            setSearchQuery('')
+            setSearchResults([])
             setDescription('')
           }}>Record Another</Button>
           <Button onClick={() => navigate('/worker/dashboard')}>Go to Dashboard</Button>
@@ -119,22 +129,63 @@ export function CashDepositPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSearchUser} className="flex gap-2">
+            <form onSubmit={(e) => e.preventDefault()} className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
                 <Input 
-                  placeholder="Enter Customer UUID..." 
+                  placeholder="Search customer by name, email, or UUID..." 
                   className="pl-10 h-11"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   disabled={isSearching || !!foundUser}
-                  required
                 />
               </div>
-              <Button type="submit" disabled={isSearching || !!foundUser} className="h-11 px-6">
-                {isSearching ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Search'}
-              </Button>
+              {isSearching && (
+                <div className="flex items-center px-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                </div>
+              )}
             </form>
+
+            {searchResults.length > 0 && !foundUser && (
+              <div className="mt-4 border dark:border-zinc-800 rounded-2xl overflow-hidden divide-y dark:divide-zinc-800 bg-white dark:bg-zinc-950 shadow-lg max-h-60 overflow-y-auto animate-in slide-in-from-top-2 duration-200">
+                {searchResults.map((user) => (
+                  <button
+                    key={user.id}
+                    type="button"
+                    onClick={() => {
+                      setFoundUser(user)
+                      setSearchQuery('')
+                      setSearchResults([])
+                    }}
+                    className="w-full text-left px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 flex items-center justify-between transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center font-bold text-sm">
+                        {user.fullName.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 transition-colors">
+                          {user.fullName}
+                        </p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">
+                      {user.id.slice(0, 8).toUpperCase()}...
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {searchQuery && !isSearching && searchResults.length === 0 && !foundUser && (
+              <div className="mt-4 p-4 text-center text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-dashed dark:border-zinc-800">
+                No customers found matching "{searchQuery}"
+              </div>
+            )}
           </CardContent>
         </Card>
 

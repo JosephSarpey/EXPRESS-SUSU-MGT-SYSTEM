@@ -106,7 +106,6 @@ export class SupabaseService {
   }
 
   async signIn(email: string, password: string) {
-    console.log(`Attempting login for: ${email}`);
     const { data, error } = await this.supabase.auth.signInWithPassword({
       email,
       password,
@@ -168,7 +167,6 @@ export class SupabaseService {
   }
 
   async updatePassword(userId: string, password: string) {
-    console.log(`Updating password for user ID: ${userId}`);
     const { data, error } = await this.supabase.auth.admin.updateUserById(
       userId,
       { password },

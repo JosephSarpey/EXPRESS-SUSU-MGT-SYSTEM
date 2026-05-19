@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import { Address } from './addresses.service'
 
 export type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'COLLECTION'
 export type PaymentMethod = 
@@ -11,6 +12,12 @@ export type PaymentMethod =
   | 'CASH'
 
 export type TransactionStatus = 'PENDING' | 'APPROVED' | 'SUCCESS' | 'FAILED' | 'REVERSED'
+
+export interface TransactionUser {
+  fullName: string
+  email: string
+  addresses?: Address[]
+}
 
 export interface Transaction {
   id: string
@@ -29,6 +36,8 @@ export interface Transaction {
   balanceAfter?: number
   createdAt: string
   updatedAt: string
+  user?: TransactionUser
+  worker?: TransactionUser
 }
 
 export interface PaginatedResponse<T> {
@@ -53,6 +62,9 @@ export interface AdminDecisionDto {
 export interface PaginationParams {
   page?: number
   limit?: number
+  search?: string
+  type?: string
+  status?: string
 }
 
 export const transactionsService = {

@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Search,
-  Filter,
   Eye,
   ChevronLeft,
   ChevronRight,
@@ -24,19 +23,34 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { TransactionDetailsModal } from "@/components/features/transactions/transaction-details-modal";
 import { Transaction } from "@/services/api/transactions.service";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export function TransactionMonitoringPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<string>("");
+  const [type, setType] = useState<string>("");
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
 
-  const { data, isLoading } = useRecentTransactions({ page, limit });
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Reset page to 1 on search or filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, status, type]);
+
+  const { data, isLoading } = useRecentTransactions({
+    page,
+    limit,
+    search: debouncedSearch || undefined,
+    status: status || undefined,
+    type: type || undefined,
+  });
 
   const transactions = data?.data || [];
-  const total = data?.meta?.total || 0;
   const totalPages = data?.meta?.totalPages || 0;
 
   const getTypeIcon = (type: string) => {
@@ -86,15 +100,29 @@ export function TransactionMonitoringPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-2xl flex-1 md:flex-none h-11 px-6"
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="h-11 px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-zinc-300 transition-colors"
               >
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
+                <option value="">All Types</option>
+                <option value="DEPOSIT">Deposit</option>
+                <option value="WITHDRAWAL">Withdrawal</option>
+              </select>
+
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="h-11 px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-zinc-300 transition-colors"
+              >
+                <option value="">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="FAILED">Failed</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
             </div>
           </div>
         </CardHeader>
@@ -133,7 +161,8 @@ export function TransactionMonitoringPage() {
                           </div>
                           <div>
                             <p className="font-bold text-zinc-900 dark:text-zinc-100">
-                              {tx.id.slice(0, 8).toUpperCase()}
+                              {tx.user?.fullName ||
+                                tx.id.slice(0, 8).toUpperCase()}
                             </p>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
                               {formatPaymentMethod(tx.paymentMethod)}

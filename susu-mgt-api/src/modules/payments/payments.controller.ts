@@ -37,8 +37,6 @@ export class PaymentsController {
       currency,
     });
 
-    console.log(`Paystack init for ${user.email}: amount=${dto.amount}, currency=${currency}, status=${init.status}`);
-
     if (!init.status || !init.data) {
       console.error(`Paystack initialization failed: ${init.message}`);
       return {

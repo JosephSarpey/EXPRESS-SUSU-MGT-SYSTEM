@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Search,
@@ -35,6 +35,7 @@ import {
 } from "@/services/api/transactions.service";
 import { useQueryClient } from "@tanstack/react-query";
 import { transactionKeys } from "@/hooks/use-transactions";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export function WithdrawalRequestsPage() {
   const navigate = useNavigate();
@@ -48,7 +49,18 @@ export function WithdrawalRequestsPage() {
     null,
   );
 
-  const { data, isLoading } = useAdminWithdrawalRequests({ page, limit });
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Reset page to 1 on search change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  const { data, isLoading } = useAdminWithdrawalRequests({ 
+    page, 
+    limit, 
+    search: debouncedSearch || undefined 
+  });
   const approveMutation = useApproveWithdrawal();
   const rejectMutation = useRejectWithdrawal();
 
@@ -89,7 +101,6 @@ export function WithdrawalRequestsPage() {
   };
 
   const requests = data?.data || [];
-  const total = data?.meta?.total || 0;
   const totalPages = data?.meta?.totalPages || 0;
 
   return (
@@ -164,10 +175,12 @@ export function WithdrawalRequestsPage() {
                           </div>
                           <div>
                             <p className="font-bold text-zinc-900 dark:text-zinc-100">
-                              {req.id.slice(0, 8).toUpperCase()}
+                              {req.user?.fullName ||
+                                req.id.slice(0, 8).toUpperCase()}
                             </p>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                              User ID: {req.userId.slice(0, 8)}...
+                              {req.user?.email ||
+                                `User ID: ${req.userId.slice(0, 8)}...`}
                             </p>
                           </div>
                         </div>

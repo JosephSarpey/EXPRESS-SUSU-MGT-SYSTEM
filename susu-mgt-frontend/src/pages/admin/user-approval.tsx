@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input'
 import { usersService } from '@/services/api/users.service'
 import { User } from '@/store/auth-store'
 import { format } from 'date-fns'
+import { useDebounce } from '@/hooks/use-debounce'
 
 export function UserApprovalPage() {
   const navigate = useNavigate()
@@ -32,9 +33,16 @@ export function UserApprovalPage() {
   const [search, setSearch] = useState('')
   const [remarks, setRemarks] = useState<string>('')
 
+  const debouncedSearch = useDebounce(search, 300)
+
+  // Reset page to 1 on search change
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch])
+
   useEffect(() => {
     fetchPendingUsers()
-  }, [page, limit, search])
+  }, [page, limit, debouncedSearch])
 
   const fetchPendingUsers = async () => {
     try {
@@ -43,7 +51,7 @@ export function UserApprovalPage() {
         page, 
         limit, 
         status: 'PENDING',
-        search: search || undefined
+        search: debouncedSearch || undefined
       })
       setPendingUsers(data.data)
       setTotal(data.meta?.total || 0)

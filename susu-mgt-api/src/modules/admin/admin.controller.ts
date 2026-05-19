@@ -99,11 +99,17 @@ export class AdminController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('userId') userId?: string,
+    @Query('search') search?: string,
+    @Query('type') type?: string,
+    @Query('status') status?: string,
   ) {
     return this.adminService.getRecentTransactions({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
       userId,
+      search,
+      type,
+      status,
     });
   }
 
@@ -130,10 +136,12 @@ export class AdminController {
   async getAuditLogs(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('search') search?: string,
   ) {
     return this.adminService.getAuditLogs({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
+      search,
     });
   }
 
@@ -197,11 +205,13 @@ export class AdminController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('workerId') workerId?: string,
+    @Query('search') search?: string,
   ) {
     return this.adminService.getWorkerCollections({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
       workerId,
+      search,
     });
   }
 
@@ -277,12 +287,14 @@ export class AdminController {
     @Query('limit') limit?: string,
     @Query('userId') userId?: string,
     @Query('workerId') workerId?: string,
+    @Query('search') search?: string,
   ) {
     return this.adminService.getAllWithdrawals({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
       userId,
       workerId,
+      search,
     });
   }
 
@@ -385,11 +397,13 @@ export class AdminController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: string,
+    @Query('search') search?: string,
   ) {
     return this.adminService.getWorkerSessions({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
       status,
+      search,
     });
   }
 

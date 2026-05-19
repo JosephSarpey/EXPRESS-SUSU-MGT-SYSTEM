@@ -189,6 +189,7 @@ model Transaction {
 
   @@index([userId])
   @@index([referenceId])
+  @@index([workerId])
 }
 
 //////////////////////////////////////////////////////
@@ -215,6 +216,8 @@ model OTPVerification {
   //////////////////////////////////////////////////////
 
   user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 //////////////////////////////////////////////////////
@@ -241,6 +244,9 @@ model WorkerSession {
   //////////////////////////////////////////////////////
 
   worker        User @relation(fields: [workerId], references: [id])
+
+  @@index([workerId])
+  @@index([status])
 }
 
 //////////////////////////////////////////////////////
@@ -265,6 +271,9 @@ model AccountApproval {
   user          User @relation("ApprovedUser", fields: [userId], references: [id])
 
   approvedBy    User @relation("ApprovedBy", fields: [approvedById], references: [id])
+
+  @@index([userId])
+  @@index([approvedById])
 }
 
 //////////////////////////////////////////////////////
@@ -297,6 +306,8 @@ model AuditLog {
   //////////////////////////////////////////////////////
 
   actor         User @relation(fields: [actorId], references: [id])
+
+  @@index([actorId])
 }
 
 //////////////////////////////////////////////////////
@@ -321,6 +332,8 @@ model PasswordResetToken {
   //////////////////////////////////////////////////////
 
   user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 //////////////////////////////////////////////////////
@@ -351,6 +364,8 @@ model Notification {
   //////////////////////////////////////////////////////
 
   user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 //////////////////////////////////////////////////////
@@ -396,4 +411,6 @@ model Address {
   //////////////////////////////////////////////////////
 
   user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

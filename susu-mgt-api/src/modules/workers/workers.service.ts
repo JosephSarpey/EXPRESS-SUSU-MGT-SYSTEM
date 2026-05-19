@@ -49,19 +49,22 @@ export class WorkersService {
         select: { id: true },
       });
 
+      const notificationsData: any[] = [];
       for (const admin of admins) {
-        await trx.notification.create({
-          data: {
-            userId: admin.id,
-            type: 'SYSTEM',
-            subject: 'Worker Collection Started',
-            message: `Worker ${worker?.fullName ?? 'Unknown'} has started their collection session.`,
-          },
+        notificationsData.push({
+          userId: admin.id,
+          type: 'SYSTEM',
+          subject: 'Worker Collection Started',
+          message: `Worker ${worker?.fullName ?? 'Unknown'} has started their collection session.`,
         });
       }
 
+      if (notificationsData.length > 0) {
+        await trx.notification.createMany({ data: notificationsData });
+      }
+
       return session;
-    });
+    }, { timeout: 15000 });
   }
 
   async clockOut(workerId: string) {
@@ -95,19 +98,22 @@ export class WorkersService {
         select: { id: true },
       });
 
+      const notificationsData: any[] = [];
       for (const admin of admins) {
-        await trx.notification.create({
-          data: {
-            userId: admin.id,
-            type: 'SYSTEM',
-            subject: 'Worker Collection Ended',
-            message: `Worker ${worker?.fullName ?? 'Unknown'} has ended their collection session.`,
-          },
+        notificationsData.push({
+          userId: admin.id,
+          type: 'SYSTEM',
+          subject: 'Worker Collection Ended',
+          message: `Worker ${worker?.fullName ?? 'Unknown'} has ended their collection session.`,
         });
       }
 
+      if (notificationsData.length > 0) {
+        await trx.notification.createMany({ data: notificationsData });
+      }
+
       return session;
-    });
+    }, { timeout: 15000 });
   }
 
   async getActiveSession(workerId: string) {
@@ -186,23 +192,21 @@ export class WorkersService {
         },
       });
 
-      await trx.notification.create({
-        data: {
-          userId: params.userId,
-          type: 'SYSTEM',
-          subject: 'Cash deposit received',
-          message: `A cash deposit of ${wallet.currency} ${params.amount.toString()} was recorded.`,
-        },
+      const notificationsData: any[] = [];
+
+      notificationsData.push({
+        userId: params.userId,
+        type: 'SYSTEM',
+        subject: 'Cash deposit received',
+        message: `A cash deposit of ${wallet.currency} ${params.amount.toString()} was recorded.`,
       });
 
       // Notify the worker who recorded the deposit
-      await trx.notification.create({
-        data: {
-          userId: params.workerId,
-          type: 'SYSTEM',
-          subject: 'Cash deposit recorded',
-          message: `You recorded a cash deposit of ${wallet.currency} ${params.amount.toString()} for customer.`,
-        },
+      notificationsData.push({
+        userId: params.workerId,
+        type: 'SYSTEM',
+        subject: 'Cash deposit recorded',
+        message: `You recorded a cash deposit of ${wallet.currency} ${params.amount.toString()} for customer.`,
       });
 
       // Notify all admins about the cash deposit
@@ -219,13 +223,11 @@ export class WorkersService {
         select: { id: true },
       });
       for (const admin of admins) {
-        await trx.notification.create({
-          data: {
-            userId: admin.id,
-            type: 'SYSTEM',
-            subject: 'Cash deposit recorded',
-            message: `Worker ${worker?.fullName ?? 'Unknown'} collected a cash deposit of ${wallet.currency} ${params.amount.toString()} from customer ${customer?.fullName ?? 'Unknown'}.`,
-          },
+        notificationsData.push({
+          userId: admin.id,
+          type: 'SYSTEM',
+          subject: 'Cash deposit recorded',
+          message: `Worker ${worker?.fullName ?? 'Unknown'} collected a cash deposit of ${wallet.currency} ${params.amount.toString()} from customer ${customer?.fullName ?? 'Unknown'}.`,
         });
       }
 
@@ -239,18 +241,22 @@ export class WorkersService {
       });
 
       for (const w of workers) {
-        await trx.notification.create({
-          data: {
-            userId: w.id,
-            type: 'SYSTEM',
-            subject: 'Team collection recorded',
-            message: `Worker ${worker?.fullName ?? 'Unknown'} collected ${wallet.currency} ${params.amount.toString()} from customer ${customer?.fullName ?? 'Unknown'}.`,
-          },
+        notificationsData.push({
+          userId: w.id,
+          type: 'SYSTEM',
+          subject: 'Team collection recorded',
+          message: `Worker ${worker?.fullName ?? 'Unknown'} collected ${wallet.currency} ${params.amount.toString()} from customer ${customer?.fullName ?? 'Unknown'}.`,
+        });
+      }
+
+      if (notificationsData.length > 0) {
+        await trx.notification.createMany({
+          data: notificationsData,
         });
       }
 
       return tx;
-    });
+    }, { timeout: 15000 });
   }
 
   async listWorkerCollections(workerId: string): Promise<{
@@ -259,14 +265,14 @@ export class WorkersService {
   }>;
   async listWorkerCollections(
     workerId: string,
-    params: { page: number; limit: number },
+    params: { page: number; limit: number; search?: string },
   ): Promise<{
     data: unknown[];
     meta: { page: number; limit: number; total: number; totalPages: number };
   }>;
   async listWorkerCollections(
     workerId: string,
-    params?: { page: number; limit: number },
+    params?: { page: number; limit: number; search?: string },
   ) {
     const page =
       params && Number.isFinite(params.page) && params.page > 0
@@ -285,10 +291,24 @@ export class WorkersService {
       paymentGateway: 'WORKER_CASH',
     };
 
+    if (params?.search) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.search.trim());
+      where.OR = [
+        { description: { contains: params.search, mode: 'insensitive' } },
+        { referenceId: { contains: params.search, mode: 'insensitive' } },
+        { user: { fullName: { contains: params.search, mode: 'insensitive' } } },
+        { user: { email: { contains: params.search, mode: 'insensitive' } } },
+        ...(isUuid ? [{ id: params.search.trim() }] : []),
+      ];
+    }
+
     const [total, data] = await Promise.all([
       this.prisma.transaction.count({ where }),
       this.prisma.transaction.findMany({
         where,
+        include: {
+          user: { select: { fullName: true, email: true } },
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -312,14 +332,14 @@ export class WorkersService {
   }>;
   async listWorkerWithdrawals(
     workerId: string,
-    params: { page: number; limit: number },
+    params: { page: number; limit: number; search?: string },
   ): Promise<{
     data: unknown[];
     meta: { page: number; limit: number; total: number; totalPages: number };
   }>;
   async listWorkerWithdrawals(
     workerId: string,
-    params?: { page: number; limit: number },
+    params?: { page: number; limit: number; search?: string },
   ) {
     const page =
       params && Number.isFinite(params.page) && params.page > 0
@@ -343,10 +363,52 @@ export class WorkersService {
       ],
     };
 
+    if (params?.search) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.search.trim());
+      where.AND = [
+        {
+          OR: [
+            { workerId },
+            {
+              paymentMethod: 'CASH',
+              status: { in: [TransactionStatus.PENDING, TransactionStatus.APPROVED] },
+            },
+          ],
+        },
+        {
+          OR: [
+            { description: { contains: params.search, mode: 'insensitive' } },
+            { referenceId: { contains: params.search, mode: 'insensitive' } },
+            { user: { fullName: { contains: params.search, mode: 'insensitive' } } },
+            { user: { email: { contains: params.search, mode: 'insensitive' } } },
+            ...(isUuid ? [{ id: params.search.trim() }] : []),
+          ],
+        },
+      ];
+      delete where.OR;
+    }
+
     const [total, data] = await Promise.all([
       this.prisma.transaction.count({ where }),
       this.prisma.transaction.findMany({
         where,
+        include: {
+          user: {
+            select: {
+              fullName: true,
+              email: true,
+              addresses: {
+                select: {
+                  street: true,
+                  city: true,
+                  state: true,
+                  zipCode: true,
+                  isPrimary: true,
+                },
+              },
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,

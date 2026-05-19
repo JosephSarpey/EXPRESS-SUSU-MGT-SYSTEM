@@ -35,6 +35,9 @@ export interface UpdateSettingDto {
 export interface PaginationParams {
   page?: number
   limit?: number
+  search?: string
+  status?: string
+  type?: string
 }
 
 export interface WorkerCollectionParams extends PaginationParams {

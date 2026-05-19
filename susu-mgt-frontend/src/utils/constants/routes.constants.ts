@@ -18,6 +18,7 @@ export const ROUTES = {
   WORKER_CASH_DEPOSIT: "/worker/cash-deposit",
   WORKER_COLLECTION_HISTORY: "/worker/collection-history",
   WORKER_WITHDRAWAL_REQUEST: "/worker/withdrawal-requests",
+  WORKER_PROFILE: "/worker/profile",
 
   // Admin routes
   ADMIN_DASHBOARD: "/admin/dashboard",
@@ -28,6 +29,7 @@ export const ROUTES = {
   ADMIN_WALLET_MANAGEMENT: "/admin/wallet-management",
   ADMIN_REPORTS: "/admin/reports",
   ADMIN_SETTINGS: "/admin/settings",
+  ADMIN_PROFILE: "/admin/profile",
 
   // Error routes
   NOT_FOUND: "/404",

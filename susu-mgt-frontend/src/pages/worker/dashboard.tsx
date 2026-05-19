@@ -29,7 +29,6 @@ export function WorkerDashboard() {
           workersService.getActiveSession(),
           workersService.getWorkerStats()
         ])
-        console.log('Dashboard data:', { sessionData, statsData })
         setSession(sessionData)
         setStats(statsData)
       } catch (err) {

@@ -4,7 +4,6 @@ import {
   ArrowLeft, 
   Users, 
   Search, 
-  Filter,
   UserPlus,
   Loader2,
   ChevronLeft,
@@ -16,7 +15,8 @@ import {
   Wallet,
   Lock,
   Unlock,
-  Eye
+  Eye,
+  History
 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -28,6 +28,7 @@ import { User as UserType } from '@/store/auth-store'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { CreateStaffDialog } from '@/components/admin/create-staff-dialog'
+import { useDebounce } from '@/hooks/use-debounce'
 
 export function UserManagementPage() {
   const navigate = useNavigate()
@@ -37,19 +38,34 @@ export function UserManagementPage() {
   const [limit] = useState(10)
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [status, setStatus] = useState<string>('')
+  const [role, setRole] = useState<string>('')
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null)
   const [userWallets, setUserWallets] = useState<Record<string, any>>({})
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
+  const debouncedSearch = useDebounce(search, 300)
+
+  // Reset page to 1 when filters or search change
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch, status, role])
+
   useEffect(() => {
     fetchUsers()
-  }, [page, limit])
+  }, [page, limit, status, role, debouncedSearch])
 
   const fetchUsers = async () => {
     try {
       setIsLoading(true)
-      const data = await usersService.getAllUsers({ page, limit })
+      const data = await usersService.getAllUsers({ 
+        page, 
+        limit,
+        status: status || undefined,
+        role: role || undefined,
+        search: debouncedSearch || undefined
+      })
       setUsers(data.data)
       setTotal(data.meta?.total || 0)
       
@@ -173,11 +189,29 @@ export function UserManagementPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <Button variant="outline" size="sm" className="rounded-full flex-1 md:flex-none">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="h-10 px-4 py-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-zinc-300 transition-colors"
+              >
+                <option value="">All Statuses</option>
+                <option value="ACTIVE">Active</option>
+                <option value="PENDING">Pending</option>
+                <option value="SUSPENDED">Suspended</option>
+                <option value="DEACTIVATED">Deactivated</option>
+              </select>
+
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="h-10 px-4 py-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-zinc-300 transition-colors"
+              >
+                <option value="">All Roles</option>
+                <option value="CUSTOMER">Customer</option>
+                <option value="WORKER">Worker</option>
+                <option value="ADMIN">Admin</option>
+              </select>
             </div>
           </div>
         </CardHeader>
@@ -412,13 +446,36 @@ export function UserManagementPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className={cn("grid gap-3", selectedUser.role === 'ADMIN' ? "grid-cols-2" : "grid-cols-3")}>
                 <Button variant="outline" className="rounded-xl w-full" onClick={() => setSelectedUser(null)}>
                   Close
                 </Button>
-                <Button className="rounded-xl w-full" onClick={() => navigate(`/admin/transactions?userId=${selectedUser.id}`)}>
-                  View Activity
+                <Button 
+                  variant="outline" 
+                  className="rounded-xl w-full"
+                  onClick={() => navigate(`/admin/wallets/${selectedUser.id}`)}
+                >
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Wallet
                 </Button>
+                {selectedUser.role === 'CUSTOMER' && (
+                  <Button 
+                    className="rounded-xl w-full"
+                    onClick={() => navigate(`/admin/wallets/${selectedUser.id}`)}
+                  >
+                    <Eye className="mr-2 h-4 w-4" />
+                    Transactions
+                  </Button>
+                )}
+                {selectedUser.role === 'WORKER' && (
+                  <Button 
+                    className="rounded-xl w-full"
+                    onClick={() => navigate(`/admin/wallets/${selectedUser.id}`)}
+                  >
+                    <History className="mr-2 h-4 w-4" />
+                    Activity
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

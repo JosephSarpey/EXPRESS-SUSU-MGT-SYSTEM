@@ -16,12 +16,10 @@ export const useAddresses = () => {
     clearError
   } = useAddressesStore()
 
-  // Fetch addresses on mount if not already loaded
+  // Fetch addresses on mount
   useEffect(() => {
-    if (addresses.length === 0 && !isLoading) {
-      fetchAddresses()
-    }
-  }, [addresses.length, isLoading, fetchAddresses])
+    fetchAddresses()
+  }, [fetchAddresses])
 
   const handleCreateAddress = async (data: CreateAddressDto) => {
     try {

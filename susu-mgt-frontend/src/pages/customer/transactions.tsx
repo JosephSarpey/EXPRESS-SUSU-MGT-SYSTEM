@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowUpRight,
   ArrowDownLeft,
   Search,
-  Filter,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -21,15 +20,32 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useMyTransactions } from "@/hooks/use-transactions";
 import { getTransactionStatusVariant } from "@/store";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export function TransactionsPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<string>("");
+  const [type, setType] = useState<string>("");
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
 
-  const { data, isLoading } = useMyTransactions({ page, limit });
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Reset page to 1 on search or filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, status, type]);
+
+  const { data, isLoading } = useMyTransactions({
+    page,
+    limit,
+    search: debouncedSearch || undefined,
+    status: status || undefined,
+    type: type || undefined,
+  });
 
   const transactions = data?.data || [];
   const total = data?.meta?.total || 0;
@@ -69,18 +85,34 @@ export function TransactionsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
               <Input
                 placeholder="Search reference or description..."
-                className="pl-10 h-10 rounded-full"
+                className="pl-10 h-11 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-none"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full flex-1 md:flex-none"
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="h-11 px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-zinc-300 transition-colors"
               >
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
+                <option value="">All Types</option>
+                <option value="DEPOSIT">Deposit</option>
+                <option value="WITHDRAWAL">Withdrawal</option>
+              </select>
+
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="h-11 px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-zinc-300 transition-colors"
+              >
+                <option value="">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="SUCCESS">Completed</option>
+                <option value="FAILED">Failed</option>
+                <option value="REVERSED">Reversed</option>
+              </select>
             </div>
           </div>
         </CardHeader>

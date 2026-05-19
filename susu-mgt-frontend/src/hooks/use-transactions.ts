@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { transactionsService, Transaction, PaginationParams } from '@/services/api/transactions.service'
+import { transactionsService } from '@/services/api/transactions.service'
 import { workersService } from '@/services/api/workers.service'
 import { adminService } from '@/services/api/admin.service'
 
@@ -8,15 +8,15 @@ export const transactionKeys = {
   lists: () => [...transactionKeys.all, 'list'] as const,
   list: (filters: any) => [...transactionKeys.lists(), { filters }] as const,
   details: (id: string) => [...transactionKeys.all, 'detail', id] as const,
-  workerWithdrawals: (params: PaginationParams) => [...transactionKeys.all, 'worker-withdrawals', params] as const,
-  workerCollections: (params: PaginationParams) => [...transactionKeys.all, 'worker-collections', params] as const,
-  adminWithdrawals: (params: PaginationParams) => [...transactionKeys.all, 'admin-withdrawals', params] as const,
-  myTransactions: (params: PaginationParams) => [...transactionKeys.all, 'my-transactions', params] as const,
-  auditLogs: (params: PaginationParams) => ['audit-logs', params] as const,
+  workerWithdrawals: (params: any) => [...transactionKeys.all, 'worker-withdrawals', params] as const,
+  workerCollections: (params: any) => [...transactionKeys.all, 'worker-collections', params] as const,
+  adminWithdrawals: (params: any) => [...transactionKeys.all, 'admin-withdrawals', params] as const,
+  myTransactions: (params: any) => [...transactionKeys.all, 'my-transactions', params] as const,
+  auditLogs: (params: any) => ['audit-logs', params] as const,
 }
 
 // Hooks for Customer
-export function useMyTransactions(params: PaginationParams) {
+export function useMyTransactions(params: any) {
   return useQuery({
     queryKey: transactionKeys.myTransactions(params),
     queryFn: () => transactionsService.getMyTransactions(params),
@@ -24,7 +24,7 @@ export function useMyTransactions(params: PaginationParams) {
 }
 
 // Hooks for Worker
-export function useWorkerWithdrawals(params: PaginationParams) {
+export function useWorkerWithdrawals(params: any) {
   return useQuery({
     queryKey: transactionKeys.workerWithdrawals(params),
     queryFn: () => workersService.getWorkerWithdrawals(params),
@@ -32,7 +32,7 @@ export function useWorkerWithdrawals(params: PaginationParams) {
   })
 }
 
-export function useWorkerCollections(params: PaginationParams) {
+export function useWorkerCollections(params: any) {
   return useQuery({
     queryKey: transactionKeys.workerCollections(params),
     queryFn: () => workersService.getWorkerCollections(params),
@@ -40,21 +40,21 @@ export function useWorkerCollections(params: PaginationParams) {
 }
 
 // Hooks for Admin
-export function useAdminWithdrawalRequests(params: PaginationParams) {
+export function useAdminWithdrawalRequests(params: any) {
   return useQuery({
     queryKey: transactionKeys.adminWithdrawals(params),
     queryFn: () => adminService.getAllWithdrawals(params),
   })
 }
 
-export function useRecentTransactions(params: PaginationParams) {
+export function useRecentTransactions(params: any) {
   return useQuery({
     queryKey: transactionKeys.list(params),
     queryFn: () => adminService.getRecentTransactions(params),
   })
 }
 
-export function useAuditLogs(params: PaginationParams) {
+export function useAuditLogs(params: any) {
   return useQuery({
     queryKey: transactionKeys.auditLogs(params),
     queryFn: () => adminService.getAuditLogs(params),

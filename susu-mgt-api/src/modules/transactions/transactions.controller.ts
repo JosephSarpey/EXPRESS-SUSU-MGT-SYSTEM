@@ -43,6 +43,21 @@ export class TransactionsController {
     required: false,
     description: 'Items per page',
   })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search by reference ID or description',
+  })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    description: 'Filter by transaction type',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Filter by transaction status',
+  })
   @ApiResponse({
     status: 200,
     description: 'Transactions retrieved successfully',
@@ -52,10 +67,16 @@ export class TransactionsController {
     @CurrentUser() user: { id: string },
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('type') type?: string,
+    @Query('status') status?: string,
   ) {
     return this.transactionsService.listMyTransactions(user.id, {
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
+      search,
+      type,
+      status,
     });
   }
 

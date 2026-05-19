@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { adminService } from '@/services/api/admin.service'
 import { format } from 'date-fns'
 import { TransactionDetailsModal } from '@/components/features/transactions/transaction-details-modal'
+import { useDebounce } from '@/hooks/use-debounce'
 
 export function WorkerCollectionsTab() {
   const [collections, setCollections] = useState<any[]>([])
@@ -23,14 +24,25 @@ export function WorkerCollectionsTab() {
   const [search, setSearch] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<any | null>(null)
 
+  const debouncedSearch = useDebounce(search, 300)
+
+  // Reset page to 1 on search change
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch])
+
   useEffect(() => {
     fetchCollections()
-  }, [page, limit, search])
+  }, [page, limit, debouncedSearch])
 
   const fetchCollections = async () => {
     try {
       setIsLoading(true)
-      const res = await adminService.getWorkerCollections({ page, limit })
+      const res = await adminService.getWorkerCollections({ 
+        page, 
+        limit,
+        search: debouncedSearch || undefined
+      })
       setCollections(res.data || [])
       setTotal(res.meta?.total || 0)
     } catch (err) {

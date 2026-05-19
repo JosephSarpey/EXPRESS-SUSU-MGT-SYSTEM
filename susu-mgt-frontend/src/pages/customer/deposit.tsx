@@ -73,7 +73,6 @@ export function DepositPage() {
   }
 
   const onClose = () => {
-    console.log('Payment closed')
   }
 
   if (success) {

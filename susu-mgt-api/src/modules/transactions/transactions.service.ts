@@ -55,7 +55,13 @@ export class TransactionsService {
 
   async listMyTransactions(
     userId: string,
-    params?: { page: number; limit: number },
+    params?: { 
+      page: number; 
+      limit: number;
+      search?: string;
+      type?: string;
+      status?: string;
+    },
   ) {
     const page =
       params && Number.isFinite(params.page) && params.page > 0
@@ -69,6 +75,21 @@ export class TransactionsService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.TransactionWhereInput = { userId };
+
+    if (params?.search) {
+      where.OR = [
+        { referenceId: { contains: params.search, mode: 'insensitive' } },
+        { description: { contains: params.search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (params?.type && Object.values(TransactionType).includes(params.type as TransactionType)) {
+      where.type = params.type as TransactionType;
+    }
+
+    if (params?.status && Object.values(TransactionStatus).includes(params.status as TransactionStatus)) {
+      where.status = params.status as TransactionStatus;
+    }
 
     const [total, data] = await Promise.all([
       this.prisma.transaction.count({ where }),
@@ -100,7 +121,22 @@ export class TransactionsService {
     const transaction = await this.prisma.transaction.findFirst({
       where,
       include: {
-        user: { select: { id: true, fullName: true, email: true } },
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            addresses: {
+              select: {
+                street: true,
+                city: true,
+                state: true,
+                zipCode: true,
+                isPrimary: true,
+              },
+            },
+          },
+        },
         worker: { select: { id: true, fullName: true, email: true } },
         wallet: { select: { id: true, currency: true } },
       },
@@ -482,13 +518,12 @@ export class TransactionsService {
         },
       });
 
-      await trx.notification.create({
-        data: {
-          userId: tx.userId,
-          type: 'SYSTEM',
-          subject: 'Deposit successful',
-          message: `Your deposit of ${wallet.currency} ${tx.amount.toString()} was successful.`,
-        },
+      const notificationsData: any[] = [];
+      notificationsData.push({
+        userId: tx.userId,
+        type: 'SYSTEM',
+        subject: 'Deposit successful',
+        message: `Your deposit of ${wallet.currency} ${tx.amount.toString()} was successful.`,
       });
 
       // Notify all admins about the Paystack deposit
@@ -501,18 +536,20 @@ export class TransactionsService {
         select: { id: true },
       });
       for (const admin of admins) {
-        await trx.notification.create({
-          data: {
-            userId: admin.id,
-            type: 'SYSTEM',
-            subject: 'Online deposit received',
-            message: `Customer ${customer?.fullName ?? 'Unknown'} made a deposit of ${wallet.currency} ${tx.amount.toString()} via Paystack (${updatedPaymentMethod}).`,
-          },
+        notificationsData.push({
+          userId: admin.id,
+          type: 'SYSTEM',
+          subject: 'Online deposit received',
+          message: `Customer ${customer?.fullName ?? 'Unknown'} made a deposit of ${wallet.currency} ${tx.amount.toString()} via Paystack (${updatedPaymentMethod}).`,
         });
       }
 
+      if (notificationsData.length > 0) {
+        await trx.notification.createMany({ data: notificationsData });
+      }
+
       return updated;
-    });
+    }, { timeout: 15000 });
   }
 
   async approveWithdrawalRequest(params: {
@@ -572,13 +609,12 @@ export class TransactionsService {
         },
       });
 
-      await trx.notification.create({
-        data: {
-          userId: tx.userId,
-          type: 'SYSTEM',
-          subject: 'Withdrawal approved',
-          message: `Your withdrawal of ${wallet.currency} ${tx.amount.toString()} has been approved. Admin will process payment via ${tx.paymentMethod}.`,
-        },
+      const notificationsData: any[] = [];
+      notificationsData.push({
+        userId: tx.userId,
+        type: 'SYSTEM',
+        subject: 'Withdrawal approved',
+        message: `Your withdrawal of ${wallet.currency} ${tx.amount.toString()} has been approved. Admin will process payment via ${tx.paymentMethod}.`,
       });
 
       // Notify workers if method is CASH
@@ -588,20 +624,22 @@ export class TransactionsService {
           select: { id: true },
         });
 
-        const workerNotifications = workers.map((worker) => ({
-          userId: worker.id,
-          type: 'SYSTEM' as const,
-          subject: 'Approved cash withdrawal ready',
-          message: `A cash withdrawal of ${wallet.currency} ${tx.amount.toString()} has been approved and is ready for payout.`,
-        }));
-
-        if (workerNotifications.length > 0) {
-          await trx.notification.createMany({ data: workerNotifications });
+        for (const worker of workers) {
+          notificationsData.push({
+            userId: worker.id,
+            type: 'SYSTEM',
+            subject: 'Approved cash withdrawal ready',
+            message: `A cash withdrawal of ${wallet.currency} ${tx.amount.toString()} has been approved and is ready for payout.`,
+          });
         }
       }
 
+      if (notificationsData.length > 0) {
+        await trx.notification.createMany({ data: notificationsData });
+      }
+
       return updated;
-    });
+    }, { timeout: 15000 });
   }
 
   async confirmWithdrawalPayment(params: {
@@ -672,27 +710,28 @@ export class TransactionsService {
         },
       });
 
-      await trx.notification.create({
-        data: {
-          userId: tx.userId,
-          type: 'SYSTEM',
-          subject: 'Withdrawal payment completed',
-          message: `Your withdrawal of ${wallet.currency} ${tx.amount.toString()} has been paid via ${tx.paymentMethod}.`,
-        },
+      const notificationsData: any[] = [];
+      notificationsData.push({
+        userId: tx.userId,
+        type: 'SYSTEM',
+        subject: 'Withdrawal payment completed',
+        message: `Your withdrawal of ${wallet.currency} ${tx.amount.toString()} has been paid via ${tx.paymentMethod}.`,
       });
 
       // Notify the admin who confirmed the payment
-      await trx.notification.create({
-        data: {
-          userId: params.adminId,
-          type: 'SYSTEM',
-          subject: 'Withdrawal payment confirmed',
-          message: `You confirmed a withdrawal payment of ${wallet.currency} ${tx.amount.toString()} via ${tx.paymentMethod}.`,
-        },
+      notificationsData.push({
+        userId: params.adminId,
+        type: 'SYSTEM',
+        subject: 'Withdrawal payment confirmed',
+        message: `You confirmed a withdrawal payment of ${wallet.currency} ${tx.amount.toString()} via ${tx.paymentMethod}.`,
       });
 
+      if (notificationsData.length > 0) {
+        await trx.notification.createMany({ data: notificationsData });
+      }
+
       return updated;
-    });
+    }, { timeout: 15000 });
   }
 
   async workerConfirmWithdrawalPayment(params: {
@@ -771,27 +810,28 @@ export class TransactionsService {
         },
       });
 
-      await trx.notification.create({
-        data: {
-          userId: tx.userId,
-          type: 'SYSTEM',
-          subject: 'Withdrawal payment completed',
-          message: `Your withdrawal of ${wallet.currency} ${tx.amount.toString()} has been paid in cash by our agent.`,
-        },
+      const notificationsData: any[] = [];
+      notificationsData.push({
+        userId: tx.userId,
+        type: 'SYSTEM',
+        subject: 'Withdrawal payment completed',
+        message: `Your withdrawal of ${wallet.currency} ${tx.amount.toString()} has been paid in cash by our agent.`,
       });
 
       // Notify the worker who confirmed the cash payment
-      await trx.notification.create({
-        data: {
-          userId: params.workerId,
-          type: 'SYSTEM',
-          subject: 'Withdrawal payment confirmed',
-          message: `You confirmed a cash withdrawal payment of ${wallet.currency} ${tx.amount.toString()}.`,
-        },
+      notificationsData.push({
+        userId: params.workerId,
+        type: 'SYSTEM',
+        subject: 'Withdrawal payment confirmed',
+        message: `You confirmed a cash withdrawal payment of ${wallet.currency} ${tx.amount.toString()}.`,
       });
 
+      if (notificationsData.length > 0) {
+        await trx.notification.createMany({ data: notificationsData });
+      }
+
       return updated;
-    });
+    }, { timeout: 15000 });
   }
 
   async rejectWithdrawalRequest(params: {

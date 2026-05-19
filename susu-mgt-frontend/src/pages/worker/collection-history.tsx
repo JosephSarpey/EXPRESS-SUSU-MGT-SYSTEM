@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -18,6 +18,7 @@ import { getTransactionStatusVariant } from "@/store";
 import { format } from "date-fns";
 import { TransactionDetailsModal } from "@/components/features/transactions/transaction-details-modal";
 import { Transaction } from "@/services/api/transactions.service";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export function CollectionHistoryPage() {
   const navigate = useNavigate();
@@ -27,7 +28,18 @@ export function CollectionHistoryPage() {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
 
-  const { data, isLoading } = useWorkerCollections({ page, limit });
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Reset page to 1 on search change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  const { data, isLoading } = useWorkerCollections({ 
+    page, 
+    limit, 
+    search: debouncedSearch || undefined 
+  });
 
   const collections = data?.data || [];
   const total = data?.meta?.total || 0;
@@ -105,8 +117,13 @@ export function CollectionHistoryPage() {
                               {tx.id.slice(0, 8).toUpperCase()}
                             </p>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                              Customer: {tx.userId.slice(0, 8)}
+                              Customer: {tx.user?.fullName || tx.userId.slice(0, 8)}
                             </p>
+                            {tx.user?.email && (
+                              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-normal mt-0.5">
+                                {tx.user.email}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
