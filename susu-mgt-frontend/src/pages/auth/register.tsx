@@ -103,7 +103,7 @@ export function RegisterPage() {
             Create Account
           </h2>
           <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">
-            SUSU Management System
+            EXPRESS <span className="text-green-400">CAPITAL</span>
           </p>
         </div>
 
