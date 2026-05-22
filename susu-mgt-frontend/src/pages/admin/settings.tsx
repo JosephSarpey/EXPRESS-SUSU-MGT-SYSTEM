@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -18,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminService } from "@/services/api/admin.service";
+import { cn } from "@/lib/utils";
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -130,64 +132,65 @@ export function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="flex items-center justify-center h-screen bg-[#070c1e]">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-12">
-      <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-[#070c1e] text-white p-6 md:p-10 font-sans selection:bg-emerald-500/30 max-w-4xl mx-auto space-y-8 pb-12 animate-in fade-in duration-500">
+      <div className="flex items-center gap-4 pb-6 border-b border-white/5 mb-8">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate(-1)}
-          className="rounded-full"
+          className="rounded-full border border-white/5 bg-[#0f1630] text-zinc-400 hover:text-emerald-400 hover:bg-[#141d3d] transition-all duration-300"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
             System Settings
           </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+          <p className="text-xs text-zinc-400 mt-1">
             Configure global parameters and platform behavior.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-6 mt-4">
         {/* General Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5 text-blue-600" />
+        <Card className="border border-white/5 bg-[#0f1630] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 hover:border-emerald-500/20 hover:shadow-[0_0_25px_rgba(16,185,129,0.08)]">
+          <CardHeader className="bg-[#0b1026] border-b border-white/5 p-4 md:p-6">
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-white">
+              <Settings className="h-4 w-4 text-blue-400" />
               General Configuration
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs text-zinc-400 mt-1">
               Main platform settings and branding.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border">
+          <CardContent className="space-y-6 p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-[#141d3d] border border-white/5 transition-all duration-300 hover:border-blue-500/20">
               <div className="flex-1">
-                <p className="font-bold text-sm">Platform Name</p>
-                <p className="text-xs text-zinc-500">
+                <p className="font-bold text-sm text-zinc-200">Platform Name</p>
+                <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
                   The public name of the platform displayed in the dashboard
                   header and sidebars.
                 </p>
               </div>
-              <div className="flex gap-2 w-full md:w-auto">
+              <div className="flex gap-2 w-full md:w-auto items-center">
                 <Input
                   value={platformNameInput}
                   onChange={(e) => setPlatformNameInput(e.target.value)}
-                  className="h-10 w-full md:w-64"
+                  className="h-11 rounded-xl bg-[#0b1026] border border-white/5 text-sm text-white placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-blue-500/50 transition-all duration-300 w-full md:w-64"
                 />
                 <Button
                   size="sm"
                   disabled={isUpdating === "platformName"}
                   onClick={handleUpdatePlatformName}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl h-11 px-5 transition-all duration-300 shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:shadow-[0_0_25px_rgba(59,130,246,0.4)]"
                 >
                   {isUpdating === "platformName" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -201,36 +204,37 @@ export function SettingsPage() {
         </Card>
 
         {/* Transaction Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Coins className="h-5 w-5 text-amber-600" />
+        <Card className="border border-white/5 bg-[#0f1630] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 hover:border-emerald-500/20 hover:shadow-[0_0_25px_rgba(16,185,129,0.08)]">
+          <CardHeader className="bg-[#0b1026] border-b border-white/5 p-4 md:p-6">
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-white">
+              <Coins className="h-4 w-4 text-emerald-400" />
               Transaction Limits
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs text-zinc-400 mt-1">
               Configure rules and thresholds for customer transactions.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border">
+          <CardContent className="space-y-6 p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-[#141d3d] border border-white/5 transition-all duration-300 hover:border-emerald-500/20">
               <div className="flex-1">
-                <p className="font-bold text-sm">Minimum Withdrawal Amount</p>
-                <p className="text-xs text-zinc-500">
+                <p className="font-bold text-sm text-zinc-200">Minimum Withdrawal Amount</p>
+                <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
                   The minimum amount a customer is allowed to request when
                   withdrawing funds.
                 </p>
               </div>
-              <div className="flex gap-2 w-full md:w-auto">
+              <div className="flex gap-2 w-full md:w-auto items-center">
                 <Input
                   type="number"
                   value={minWithdrawalInput}
                   onChange={(e) => setMinWithdrawalInput(e.target.value)}
-                  className="h-10 w-full md:w-64"
+                  className="h-11 rounded-xl bg-[#0b1026] border border-white/5 text-sm text-white placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-emerald-500/50 transition-all duration-300 w-full md:w-64"
                 />
                 <Button
                   size="sm"
                   disabled={isUpdating === "minWithdrawalAmount"}
                   onClick={handleUpdateMinWithdrawal}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl h-11 px-5 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.4)]"
                 >
                   {isUpdating === "minWithdrawalAmount" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -245,15 +249,15 @@ export function SettingsPage() {
       </div>
 
       {success && (
-        <div className="fixed bottom-8 right-8 bg-emerald-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-right duration-300">
-          <CheckCircle2 className="h-5 w-5" />
+        <div className="fixed bottom-8 right-8 bg-emerald-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-emerald-500 animate-in slide-in-from-right duration-300 z-50">
+          <CheckCircle2 className="h-5 w-5 text-emerald-200" />
           <p className="font-bold text-sm">{success}</p>
         </div>
       )}
 
       {error && (
-        <div className="fixed bottom-8 right-8 bg-red-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-right duration-300">
-          <AlertCircle className="h-5 w-5" />
+        <div className="fixed bottom-8 right-8 bg-red-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-red-500 animate-in slide-in-from-right duration-300 z-50">
+          <AlertCircle className="h-5 w-5 text-red-200" />
           <p className="font-bold text-sm">{error}</p>
         </div>
       )}

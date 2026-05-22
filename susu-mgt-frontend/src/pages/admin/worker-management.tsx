@@ -1,16 +1,18 @@
+
 import { useEffect, useState } from 'react'
-import {
-  ArrowLeft,
-  Search,
-  Users,
-  PowerOff,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  History,
-  Monitor,
-  Info
+import { useNavigate } from 'react-router-dom'
+import { 
+  ArrowLeft, 
+  Search, 
+  Users, 
+  PowerOff, 
+  Loader2, 
+  ChevronLeft, 
+  ChevronRight, 
+  Clock, 
+  History, 
+  Monitor, 
+  Info 
 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,7 +21,6 @@ import { Input } from '@/components/ui/input'
 import { adminService } from '@/services/api/admin.service'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
-import { useNavigate } from 'react-router-dom'
 import { WorkerCollectionsTab } from '@/components/admin/worker-collections-tab'
 import { useDebounce } from '@/hooks/use-debounce'
 
@@ -80,26 +81,34 @@ export function WorkerManagementPage() {
   const totalPages = Math.ceil(total / limit)
 
   return (
-    <div className="space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="min-h-screen bg-[#070c1e] text-white p-6 md:p-10 font-sans selection:bg-emerald-500/30 space-y-8 pb-12 animate-in fade-in duration-500">
+      
+      {/* Page Header block */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/5">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate(-1)} 
+            className="rounded-full border border-white/5 bg-[#0f1630] text-zinc-400 hover:text-emerald-400 hover:bg-[#141d3d] transition-all duration-300"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">Worker Management</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1">Monitor active worker sessions and activities.</p>
+            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Worker Management</h1>
+            <p className="text-xs text-zinc-400 mt-1">Monitor active worker sessions and activities.</p>
           </div>
         </div>
       </div>
 
-      <div className="flex gap-4 border-b dark:border-zinc-800">
+      {/* Custom Sliding Segmented Tabs Header */}
+      <div className="flex gap-6 border-b border-white/5 pt-2">
         <button
           className={cn(
-            "pb-3 font-medium text-sm border-b-2 transition-colors",
+            "pb-3 font-semibold text-xs tracking-wider uppercase border-b-2 transition-all duration-300",
             activeTab === 'sessions'
-              ? "border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400"
-              : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+              ? "border-emerald-400 text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+              : "border-transparent text-zinc-500 hover:text-zinc-300"
           )}
           onClick={() => setActiveTab('sessions')}
         >
@@ -110,10 +119,10 @@ export function WorkerManagementPage() {
         </button>
         <button
           className={cn(
-            "pb-3 font-medium text-sm border-b-2 transition-colors",
+            "pb-3 font-semibold text-xs tracking-wider uppercase border-b-2 transition-all duration-300",
             activeTab === 'collections'
-              ? "border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400"
-              : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+              ? "border-emerald-400 text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+              : "border-transparent text-zinc-500 hover:text-zinc-300"
           )}
           onClick={() => setActiveTab('collections')}
         >
@@ -124,77 +133,87 @@ export function WorkerManagementPage() {
         </button>
       </div>
 
-      <Card>
-        <CardHeader className="p-4 md:p-6 border-b dark:border-zinc-800">
+      {/* Main Container Card */}
+      <Card className="border border-white/5 bg-[#0f1630] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 hover:border-emerald-500/20 hover:shadow-[0_0_25px_rgba(16,185,129,0.08)] mt-4">
+        <CardHeader className="p-4 md:p-6 border-b border-white/5 bg-[#0b1026]">
           <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <div className="relative w-full md:w-96 group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
               <Input
                 placeholder="Search..."
-                className="pl-10 h-10 rounded-full"
+                className="pl-11 h-11 rounded-xl bg-[#141d3d] border border-white/5 text-sm text-white placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-emerald-500/50 transition-all duration-300"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
         </CardHeader>
+        
         <CardContent className="p-0">
           {activeTab === 'sessions' && (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs text-zinc-500 dark:text-zinc-400 uppercase bg-zinc-50/50 dark:bg-zinc-900/50 border-b dark:border-zinc-800">
+              <table className="w-full text-sm text-left border-collapse">
+                {/* Header columns spacing adjustments */}
+                <thead className="text-[11px] text-zinc-400 uppercase tracking-widest bg-[#0b1026]/60 border-b border-white/5">
                   <tr>
-                    <th className="px-6 py-4 font-bold">Worker</th>
-                    <th className="px-6 py-4 font-bold">Status</th>
-                    <th className="px-6 py-4 font-bold">Clock In</th>
-                    <th className="px-6 py-4 font-bold">Clock Out</th>
-                    <th className="px-6 py-4 font-bold">IP Address</th>
-                    <th className="px-6 py-4 font-bold text-right">Actions</th>
+                    <th className="px-6 py-5 font-bold">Worker</th>
+                    <th className="px-6 py-5 font-bold">Status</th>
+                    <th className="px-6 py-5 font-bold">Clock In</th>
+                    <th className="px-6 py-5 font-bold">Clock Out</th>
+                    <th className="px-6 py-5 font-bold">IP Address</th>
+                    <th className="px-6 py-5 font-bold text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y dark:divide-zinc-800">
+                <tbody className="divide-y divide-white/5">
                   {isLoading ? (
                     [1, 2, 3].map(i => (
-                      <tr key={i} className="animate-pulse">
-                        <td colSpan={5} className="px-6 py-4">
-                          <div className="h-10 bg-zinc-100 dark:bg-zinc-800 rounded-lg" />
+                      <tr key={i} className="animate-pulse bg-[#0f1630]">
+                        <td colSpan={6} className="px-6 py-6">
+                          <div className="h-10 bg-[#162045] rounded-xl" />
                         </td>
                       </tr>
                     ))
                   ) : sessions.length > 0 ? (
                     sessions.map((session) => (
-                      <tr key={session.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center font-bold">
+                      <tr key={session.id} className="group hover:bg-[#131c3d]/60 transition-all duration-300 ease-out">
+                        {/* py-5.5 increases the space inside cell blocks making row components clearer to isolate visually */}
+                        <td className="px-6 py-7">
+                          <div className="flex items-center gap-3.5">
+                            <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold group-hover:scale-105 group-hover:border-emerald-500/30 group-hover:text-emerald-400 transition-all duration-300">
                               {session.worker?.fullName?.charAt(0) || 'W'}
                             </div>
                             <div>
-                              <p className="font-bold text-zinc-900 dark:text-zinc-100">{session.worker?.fullName || 'Unknown'}</p>
-                              <p className="text-xs text-zinc-500 dark:text-zinc-400">ID: {session.workerId?.slice(0, 8)}</p>
+                              <p className="font-bold text-zinc-200 group-hover:text-white transition-colors">{session.worker?.fullName || 'Unknown'}</p>
+                              <p className="text-xs text-zinc-500 font-medium">ID: {session.workerId?.slice(0, 8).toUpperCase()}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <Badge variant={session.status === 'ACTIVE' ? 'success' : 'secondary'}>
+                        <td className="px-6 py-5.5">
+                          <Badge 
+                            variant={session.status === 'ACTIVE' ? 'success' : 'secondary'}
+                            className={cn(
+                              "text-[10px] uppercase tracking-wider font-extrabold border-none px-2.5 py-0.5 rounded-full",
+                              session.status === 'ACTIVE' ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-700 text-zinc-300"
+                            )}
+                          >
                             {session.status || 'ACTIVE'}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400">
+                        <td className="px-6 py-5.5 text-xs text-zinc-400">
                           {session.loginTime ? format(new Date(session.loginTime), 'MMM dd, HH:mm') : 'N/A'}
                         </td>
-                        <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400">
-                          {session.logoutTime ? format(new Date(session.logoutTime), 'MMM dd, HH:mm') : (session.status === 'ACTIVE' ? 'Ongoing' : 'N/A')}
+                        <td className="px-6 py-5.5 text-xs font-semibold text-zinc-400">
+                          {session.logoutTime ? format(new Date(session.logoutTime), 'MMM dd, HH:mm') : (session.status === 'ACTIVE' ? <span className="text-blue-400">Ongoing</span> : 'N/A')}
                         </td>
-                        <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400">
+                        <td className="px-6 py-5.5 text-xs text-zinc-400">
                           {session.ipAddress || 'Unknown'}
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2">
+                        <td className="px-6 py-5.5 text-right">
+                          <div className="flex justify-end gap-1.5">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                              className="h-8 w-8 rounded-lg text-blue-400 hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 transition-all duration-300"
                               onClick={() => setSelectedSession(session)}
                               title="View Details"
                             >
@@ -204,7 +223,7 @@ export function WorkerManagementPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                className="h-8 w-8 rounded-lg text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all duration-300"
                                 onClick={() => handleTerminate(session.id)}
                                 disabled={isProcessing === session.id}
                                 title="Terminate Session"
@@ -218,9 +237,10 @@ export function WorkerManagementPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="px-6 py-24 text-center">
-                        <Users className="h-12 w-12 text-zinc-200 dark:text-zinc-800 mx-auto mb-4" />
-                        <p className="text-zinc-500 dark:text-zinc-400">No sessions found.</p>
+                      <td colSpan={6} className="px-6 py-24 text-center bg-[#0f1630]">
+                        <Users className="h-12 w-12 text-zinc-700 mx-auto mb-4 animate-pulse" />
+                        <h3 className="text-base font-bold text-zinc-300">No sessions found</h3>
+                        <p className="text-xs text-zinc-500 mt-0.5">There are no operational backend worker nodes detected.</p>
                       </td>
                     </tr>
                   )}
@@ -236,9 +256,9 @@ export function WorkerManagementPage() {
           )}
 
           {totalPages > 1 && activeTab === 'sessions' && (
-            <div className="flex items-center justify-between p-6 border-t dark:border-zinc-800">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                Page <span className="text-zinc-900 dark:text-zinc-100 font-bold">{page}</span> of <span className="text-zinc-900 dark:text-zinc-100 font-bold">{totalPages}</span>
+            <div className="flex items-center justify-between p-4.5 border-t border-white/5 bg-[#0b1026]/40">
+              <p className="text-xs text-zinc-400 font-medium">
+                Page <span className="text-emerald-400 font-black">{page}</span> of <span className="text-white font-black">{totalPages}</span>
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -246,7 +266,7 @@ export function WorkerManagementPage() {
                   size="sm"
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="rounded-xl"
+                  className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white disabled:opacity-40 transition-colors duration-300"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -255,7 +275,7 @@ export function WorkerManagementPage() {
                   size="sm"
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="rounded-xl"
+                  className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white disabled:opacity-40 transition-colors duration-300"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -265,64 +285,77 @@ export function WorkerManagementPage() {
         </CardContent>
       </Card>
 
+      {/* Profiles Modal Overlays overlay */}
       {selectedSession && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <Card className="w-full max-w-lg">
-            <CardHeader className="flex flex-row items-center justify-between border-b dark:border-zinc-800 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+          <Card className="w-full max-w-lg overflow-hidden border border-white/10 bg-[#0f1630] text-white rounded-2xl shadow-2xl shadow-black/80">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 bg-[#0b1026] p-4.5">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center font-bold">
+                <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
                   <Monitor className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">Session Details</h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">ID: {selectedSession.id}</p>
+                  <h3 className="font-bold text-base text-zinc-200 tracking-wide">Session Details</h3>
+                  <p className="text-[10px] uppercase tracking-widest font-black text-zinc-500 mt-0.5">ID: {selectedSession.id.slice(0, 12).toUpperCase()}...</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedSession(null)} className="rounded-full">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setSelectedSession(null)} 
+                className="rounded-full h-8 w-8 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+              >
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
               </Button>
             </CardHeader>
+            
             <CardContent className="p-6 space-y-6">
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border dark:border-zinc-800">
-                <div className="h-12 w-12 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl font-bold">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br from-[#161f3d] to-[#0c1229] border border-white/5">
+                <div className="h-12 w-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center text-xl font-black">
                   {selectedSession.worker?.fullName?.charAt(0) || 'W'}
                 </div>
                 <div>
-                  <p className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">{selectedSession.worker?.fullName || 'Unknown Worker'}</p>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">{selectedSession.worker?.email || 'No email'}</p>
+                  <p className="font-bold text-white text-base">{selectedSession.worker?.fullName || 'Unknown Worker'}</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">{selectedSession.worker?.email || 'No email associated'}</p>
                 </div>
-                <Badge className="ml-auto" variant={selectedSession.status === 'ACTIVE' ? 'success' : 'secondary'}>
+                <Badge 
+                  className={cn(
+                    "ml-auto text-[10px] uppercase tracking-wider font-extrabold border-none px-2.5 py-0.5 rounded-full",
+                    selectedSession.status === 'ACTIVE' ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-700 text-zinc-300"
+                  )} 
+                  variant={selectedSession.status === 'ACTIVE' ? 'success' : 'secondary'}
+                >
                   {selectedSession.status}
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4 text-xs border-y border-white/5 py-4">
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Clock In</p>
-                  <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <p className="font-semibold text-zinc-500 uppercase tracking-wider">Clock In</p>
+                  <p className="font-bold text-zinc-200">
                     {selectedSession.loginTime ? format(new Date(selectedSession.loginTime), 'PPP p') : 'N/A'}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Clock Out</p>
-                  <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <p className="font-semibold text-zinc-500 uppercase tracking-wider">Clock Out</p>
+                  <p className="font-bold text-zinc-200">
                     {selectedSession.logoutTime ? format(new Date(selectedSession.logoutTime), 'PPP p') : (selectedSession.status === 'ACTIVE' ? 'Still active' : 'N/A')}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">IP Address</p>
-                  <p className="font-medium text-zinc-900 dark:text-zinc-100">{selectedSession.ipAddress || 'Unknown'}</p>
+                  <p className="font-semibold text-zinc-500 uppercase tracking-wider">IP Address</p>
+                  <p className="font-bold text-zinc-200">{selectedSession.ipAddress || 'Unknown'}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Device</p>
-                  <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate" title={selectedSession.deviceInfo}>
+                  <p className="font-semibold text-zinc-500 uppercase tracking-wider">Device Cluster</p>
+                  <p className="font-bold text-zinc-200 truncate" title={selectedSession.deviceInfo}>
                     {selectedSession.deviceInfo || 'Unknown Device'}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-4 border-t dark:border-zinc-800">
-                <Button className="w-full rounded-xl" variant="outline" onClick={() => setSelectedSession(null)}>
+              <div className="pt-2">
+                <Button className="w-full rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-zinc-300 hover:text-white transition-colors duration-300" variant="outline" onClick={() => setSelectedSession(null)}>
                   Close Details
                 </Button>
               </div>
@@ -333,3 +366,8 @@ export function WorkerManagementPage() {
     </div>
   )
 }
+
+
+
+
+

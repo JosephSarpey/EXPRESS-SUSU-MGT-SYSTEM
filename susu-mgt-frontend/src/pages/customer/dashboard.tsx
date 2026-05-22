@@ -1,7 +1,14 @@
 
 
+
+
+
+
+
+
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import logo from "../../assets/logo2.png";
 import { 
   Wallet, 
   ArrowUpRight, 
@@ -542,11 +549,10 @@ export function CustomerDashboard() {
           <span className="text-[10px]">Transactions</span>
         </Link>
         
-        <div className="flex flex-col items-center justify-center -mt-6">
-          <div className="bg-[#FFCC00] text-[#004D40] p-3.5 rounded-full shadow-lg border-4 border-white hover:scale-105 transition-transform cursor-pointer">
-            <QrCode className="h-6 w-6 stroke-[2.5]" />
+        <div className="flex flex-col items-center justify-center"> 
+          <div className="rounded-full shadow-lg border-white hover:scale-105 transition-transform cursor-pointer bg-blue-500 flex items-center justify-center">
+            <img className='h-16 w-16' src={logo} alt="Logo" />
           </div>
-          <span className="text-[10px] text-[#004D40] font-bold mt-1">Scan QR</span>
         </div>
 
         <div className="flex flex-col items-center justify-center text-zinc-400 cursor-pointer hover:text-[#004D40] transition-colors">
