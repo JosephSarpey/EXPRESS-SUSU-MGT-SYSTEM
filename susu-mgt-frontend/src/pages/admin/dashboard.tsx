@@ -32,7 +32,6 @@
 import { useEffect, useState } from 'react'
 import {
   Users,
-  Wallet,
   ArrowUpRight,
   ArrowDownLeft,
   Activity,
@@ -45,7 +44,7 @@ import {
   CreditCard,
   BarChart3
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { adminService, DashboardStats } from '@/services/api/admin.service'
 import { cn } from '@/lib/utils'

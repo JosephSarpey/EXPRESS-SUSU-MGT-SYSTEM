@@ -24,7 +24,6 @@ import { usersService } from '@/services/api/users.service'
 import { User } from '@/store/auth-store'
 import { format } from 'date-fns'
 import { useDebounce } from '@/hooks/use-debounce'
-import { cn } from '@/lib/utils'
 
 export function UserApprovalPage() {
   const navigate = useNavigate()

@@ -18,7 +18,6 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuditLogs } from "@/hooks/use-transactions";
 import { useDebounce } from "@/hooks/use-debounce";
-import { cn } from "@/lib/utils";
 
 export function AuditLogsPage() {
   const navigate = useNavigate();
@@ -34,10 +33,10 @@ export function AuditLogsPage() {
     setPage(1);
   }, [debouncedSearch]);
 
-  const { data, isLoading } = useAuditLogs({ 
-    page, 
-    limit, 
-    search: debouncedSearch || undefined 
+  const { data, isLoading } = useAuditLogs({
+    page,
+    limit,
+    search: debouncedSearch || undefined
   });
 
   const logs = data?.data || [];
@@ -198,9 +197,9 @@ export function AuditLogsPage() {
                       <td className="px-6 py-5.5 text-xs text-zinc-400">
                         {log.createdAt
                           ? format(
-                              new Date(log.createdAt),
-                              "MMM dd, yyyy HH:mm:ss",
-                            )
+                            new Date(log.createdAt),
+                            "MMM dd, yyyy HH:mm:ss",
+                          )
                           : "N/A"}
                       </td>
                       <td className="px-6 py-5.5 text-right">

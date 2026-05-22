@@ -23,7 +23,6 @@ import {
   EyeOff,
   Bell,
   Send,
-  QrCode,
   Gift,
   MoreHorizontal,
   LogOut
