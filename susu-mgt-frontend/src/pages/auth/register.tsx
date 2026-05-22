@@ -95,16 +95,17 @@ export function RegisterPage() {
         {/* Header */}
         <div className="px-6 pt-6 pb-2 shrink-0 text-center">
           <img
-            className="h-10 mx-auto object-contain mb-2"
+            className=" h-10   mx-auto object-contain mb-2"
             src={logo}
             alt="Logo"
           />
-          <h2 className="text-xl font-bold text-white tracking-tight">
-            Create Account
-          </h2>
           <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">
             EXPRESS <span className="text-green-400">CAPITAL</span>
           </p>
+          <h2 className="text-xl font-bold text-white tracking-tight">
+            Create Account
+          </h2>
+          
         </div>
 
         {/* Scroll-Disabled Content */}

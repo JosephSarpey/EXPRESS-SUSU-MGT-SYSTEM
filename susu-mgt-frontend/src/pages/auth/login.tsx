@@ -65,9 +65,9 @@ export function LoginPage() {
       <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl bg-[#1a1a1a] shadow-2xl border border-zinc-800">
         {/* Header */}
         <div className="px-8 pt-8 pb-4 shrink-0 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-900/20">
+          <div className="mx-auto flex w-20 items-center justify-center rounded-2xl ">
             <img
-              className="h-10 mx-auto object-contain mb-2"
+              className="w-full mx-auto object-contain mb-2"
               src={logo}
               alt="Logo"
             />

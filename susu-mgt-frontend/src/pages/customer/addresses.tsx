@@ -1,8 +1,4 @@
 
-
-
-
-
 import { AddressesList } from '@/components/addresses/AddressesList'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
@@ -42,7 +38,7 @@ export function AddressesPage() {
 
         {/* Small subtle branding node */}
         <div className="bg-[#FFCC00] text-[#003366] px-3 py-1 rounded-lg font-black text-xs uppercase tracking-wider hidden xs:block">
-          MoMo Profile
+          My Profile
         </div>
       </header>
 
