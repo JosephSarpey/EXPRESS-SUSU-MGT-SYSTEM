@@ -1,9 +1,14 @@
 export function NotFoundPage() {
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold">404</h1>
-        <p className="text-muted-foreground">Page not found</p>
+    <div className="flex h-screen items-center justify-center bg-[#070c1e] text-white p-6 font-sans animate-in fade-in duration-500 selection:bg-emerald-500/30">
+      <div className="text-center relative">
+        <h1 className="text-7xl font-black tracking-tighter bg-gradient-to-r from-white via-zinc-400 to-zinc-600 bg-clip-text text-transparent drop-shadow-xl animate-pulse">
+          404
+        </h1>
+        <div className="w-12 h-1 bg-blue-600 rounded-full mx-auto my-4 shadow-sm shadow-blue-500/50" />
+        <p className="text-sm font-medium text-zinc-400 tracking-tight">
+          Page not found
+        </p>
       </div>
     </div>
   )

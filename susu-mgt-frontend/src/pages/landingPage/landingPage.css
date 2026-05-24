@@ -35,7 +35,7 @@
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-	width: 8px;
+	display: none;
 }
 
 ::-webkit-scrollbar-track {
@@ -47,6 +47,23 @@
 	background: var(--company-color);
 	border-radius: 4px;
 }
+
+
+
+
+* {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+	display: none;
+}
+
+
+
+
+
 
 /* Header Navigation */
 .landing-page-wrapper header {

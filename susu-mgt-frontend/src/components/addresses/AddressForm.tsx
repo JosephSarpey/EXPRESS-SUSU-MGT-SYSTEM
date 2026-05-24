@@ -138,9 +138,12 @@ export const AddressForm: React.FC<AddressFormProps> = ({
             />
           </div>
           <div className="ml-3 text-sm leading-6">
-            <label htmlFor="isPrimary" className="font-medium text-zinc-900 dark:text-zinc-100 cursor-pointer">
-              Set as primary address
-            </label>
+            <label 
+            htmlFor="isPrimary" 
+            className="text-xs sm:text-sm font-semibold text-zinc-400 hover:text-emerald-400 transition-colors duration-200 cursor-pointer select-none ml-2"
+          >
+            Set as primary address
+          </label>
             <p className="text-zinc-500 dark:text-zinc-400">Make this your default address for all activities.</p>
           </div>
         </div>
