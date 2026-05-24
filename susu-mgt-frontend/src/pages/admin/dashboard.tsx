@@ -1,34 +1,5 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useEffect, useState } from 'react'
 import {
   Users,
@@ -49,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { adminService, DashboardStats } from '@/services/api/admin.service'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Link } from 'react-router-dom'
 
 export function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -162,7 +134,7 @@ export function AdminDashboard() {
           {/* Users Card */}
           <Card className="bg-[#0f1630] border border-white/5 p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-emerald-500/30 hover:shadow-[0_0_15px_rgba(16,185,129,0.12)]">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Total Users</span>
+             <Link to=""> <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Total Users</span></Link>
               <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
                 <Users className="h-4 w-4" />
               </div>

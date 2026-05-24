@@ -1,8 +1,11 @@
+
+
 import { X, Receipt, Clock, CreditCard, Hash, Activity, FileText, User, Users, MapPin } from 'lucide-react'
 import { Transaction } from '@/services/api/transactions.service'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { getTransactionStatusVariant } from '@/store'
+import { cn } from '@/lib/utils'
 
 interface TransactionDetailsModalProps {
   transaction: Transaction | null
@@ -15,50 +18,63 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'DEPOSIT':
-      case 'COLLECTION': return 'text-emerald-600'
-      case 'WITHDRAWAL': return 'text-amber-600'
-      case 'TRANSFER': return 'text-blue-600'
-      default: return 'text-zinc-600'
+      case 'COLLECTION': return 'text-emerald-400'
+      case 'WITHDRAWAL': return 'text-amber-400'
+      case 'TRANSFER': return 'text-blue-400'
+      default: return 'text-zinc-400'
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
+      onClick={onClose}
+    >
       <div 
-        className="bg-white dark:bg-zinc-950 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-[#0f1630] border border-white/5 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] text-white animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b dark:border-zinc-800">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 ${getTypeColor(transaction.type)}`}>
-              <Receipt className="h-5 w-5" />
+        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-white/5 bg-[#0b1026]">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={cn("p-2.5 rounded-xl bg-[#141d3d] border border-white/5 shrink-0", getTypeColor(transaction.type))}>
+              <Receipt className="h-5 w-5 stroke-[2.2]" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Transaction Details</h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">ID: {transaction.id}</p>
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight truncate">Transaction Details</h2>
+              <p className="text-[11px] sm:text-xs text-zinc-500 font-mono tracking-wider truncate mt-0.5">#{transaction.id.toUpperCase()}</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors"
+            className="p-2 rounded-xl bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-colors shrink-0 outline-none"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5 sm:space-y-6 scrollbar-thin">
           
           {/* Main Amount Card */}
-          <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex flex-col items-center justify-center text-center">
-            <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-2">
+          <div className="p-5 sm:p-6 rounded-2xl bg-[#141d3d] border border-white/5 flex flex-col items-center justify-center text-center shadow-2xs">
+            <p className="text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
               {transaction.type}
             </p>
-            <h3 className={`text-4xl font-extrabold mb-3 ${getTypeColor(transaction.type)}`}>
-              GH₵ {Number(transaction.amount || 0).toFixed(2)}
+            <h3 className={cn("text-2xl sm:text-3xl font-black mb-3 tracking-tight", getTypeColor(transaction.type))}>
+              GH₵ {Number(transaction.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </h3>
-            <Badge variant={getTransactionStatusVariant(transaction.status)} className="px-3 py-1">
+            <Badge 
+              variant={getTransactionStatusVariant(transaction.status)} 
+              className={cn(
+                "text-[10px] uppercase tracking-wider font-extrabold px-3 py-0.5 rounded-md border shadow-2xs",
+                transaction.status === 'SUCCESS' && "bg-emerald-500/10 text-emerald-400 border-emerald-500/10",
+                transaction.status === 'PENDING' && "bg-amber-500/10 text-amber-400 border-amber-500/10",
+                transaction.status === 'APPROVED' && "bg-blue-500/10 text-blue-400 border-blue-500/10",
+                transaction.status === 'FAILED' && "bg-red-500/10 text-red-400 border-red-500/10",
+                transaction.status === 'REVERSED' && "bg-zinc-700 text-zinc-300 border-white/5"
+              )}
+            >
               {transaction.status}
             </Badge>
           </div>
@@ -67,29 +83,30 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
           {(transaction.user || transaction.worker) && (
             <div className="space-y-3">
               {transaction.user && (
-                <div className="flex items-start gap-3 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
-                  <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
+                <div className="flex items-start gap-3 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10 shadow-2xs">
+                  <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shrink-0 mt-0.5 shadow-md shadow-blue-500/10">
                     {transaction.user.fullName?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Customer</span>
+                    <div className="flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Customer</span>
                     </div>
-                    <p className="font-bold text-zinc-900 dark:text-zinc-100 truncate">{transaction.user.fullName}</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{transaction.user.email}</p>
+                    <p className="font-bold text-sm text-white truncate mt-1">{transaction.user.fullName}</p>
+                    <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">{transaction.user.email}</p>
+                    
                     {transaction.user.addresses && transaction.user.addresses.length > 0 && (
-                      <div className="mt-2 pt-2 border-t border-blue-100 dark:border-blue-900/30 space-y-1">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block mb-1">
+                      <div className="mt-3 pt-2.5 border-t border-white/5 space-y-1.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-blue-400 block mb-1">
                           Addresses
                         </span>
                         {transaction.user.addresses.map((addr, idx) => (
-                          <div key={idx} className="flex items-start gap-1.5 text-xs text-zinc-700 dark:text-zinc-300">
-                            <MapPin className="h-3.5 w-3.5 mt-0.5 text-blue-500 dark:text-blue-400 shrink-0" />
-                            <span className="leading-tight">
+                          <div key={idx} className="flex items-start gap-1.5 text-xs text-zinc-300 font-medium leading-relaxed">
+                            <MapPin className="h-3.5 w-3.5 mt-0.5 text-blue-400 shrink-0" />
+                            <span>
                               {[addr.street, addr.city, addr.state, addr.zipCode].filter(Boolean).join(', ')}
                               {addr.isPrimary && (
-                                <span className="text-[8px] ml-1.5 px-1 py-0.2 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded font-bold uppercase tracking-wider">
+                                <span className="text-[8px] ml-1.5 px-1 py-0.2 bg-blue-500/10 text-blue-400 rounded font-black uppercase tracking-wider border border-blue-500/10 shadow-2xs">
                                   Primary
                                 </span>
                               )}
@@ -102,17 +119,17 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
                 </div>
               )}
               {transaction.worker && (
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30">
-                  <div className="h-10 w-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-purple-500/5 border border-purple-500/10 shadow-2xs">
+                  <div className="h-10 w-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-purple-500/10">
                     {transaction.worker.fullName?.charAt(0)?.toUpperCase() || 'W'}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Worker</span>
+                    <div className="flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Worker</span>
                     </div>
-                    <p className="font-bold text-zinc-900 dark:text-zinc-100 truncate">{transaction.worker.fullName}</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{transaction.worker.email}</p>
+                    <p className="font-bold text-sm text-white truncate mt-1">{transaction.worker.fullName}</p>
+                    <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">{transaction.worker.email}</p>
                   </div>
                 </div>
               )}
@@ -120,43 +137,43 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
           )}
 
           {/* Details Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 space-y-1">
-              <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-1">
-                <Clock className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Date & Time</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="p-3.5 rounded-2xl bg-[#141d3d] border border-white/5 space-y-1 min-w-0">
+              <div className="flex items-center gap-1.5 text-zinc-500 mb-1">
+                <Clock className="h-3.5 w-3.5 text-blue-400" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Date & Time</span>
               </div>
-              <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
-                {format(new Date(transaction.createdAt), 'MMM dd, yyyy - hh:mm a')}
+              <p className="font-bold text-xs sm:text-sm text-zinc-200">
+                {format(new Date(transaction.createdAt), 'MMM dd, yyyy · hh:mm a')}
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 space-y-1">
-              <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-1">
-                <CreditCard className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Method</span>
+            <div className="p-3.5 rounded-2xl bg-[#141d3d] border border-white/5 space-y-1 min-w-0">
+              <div className="flex items-center gap-1.5 text-zinc-500 mb-1">
+                <CreditCard className="h-3.5 w-3.5 text-blue-400" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Method</span>
               </div>
-              <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
-                {transaction.paymentMethod.replace(/_/g, ' ')}
+              <p className="font-bold text-xs sm:text-sm text-zinc-200 capitalize">
+                {transaction.paymentMethod.replace(/_/g, ' ').toLowerCase()}
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 space-y-1">
-              <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-1">
-                <Hash className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Reference ID</span>
+            <div className="p-3.5 rounded-2xl bg-[#141d3d] border border-white/5 space-y-1 min-w-0">
+              <div className="flex items-center gap-1.5 text-zinc-500 mb-1">
+                <Hash className="h-3.5 w-3.5 text-blue-400" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Reference ID</span>
               </div>
-              <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100 break-all">
+              <p className="font-mono text-xs text-zinc-200 break-all select-all">
                 {transaction.referenceId || 'N/A'}
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 space-y-1">
-              <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-1">
-                <Activity className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Gateway</span>
+            <div className="p-3.5 rounded-2xl bg-[#141d3d] border border-white/5 space-y-1 min-w-0">
+              <div className="flex items-center gap-1.5 text-zinc-500 mb-1">
+                <Activity className="h-3.5 w-3.5 text-blue-400" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Gateway</span>
               </div>
-              <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
+              <p className="font-bold text-xs sm:text-sm text-zinc-200 truncate">
                 {transaction.paymentGateway || 'N/A'}
               </p>
             </div>
@@ -164,25 +181,25 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
 
           {/* Descriptive Info */}
           {(transaction.description || transaction.remarks) && (
-            <div className="space-y-4 pt-4 border-t dark:border-zinc-800">
+            <div className="space-y-4 pt-4 border-t border-white/5">
               {transaction.description && (
-                <div>
-                  <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-1">
-                    <FileText className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Description</span>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-zinc-500 mb-1">
+                    <FileText className="h-3.5 w-3.5 text-blue-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Description</span>
                   </div>
-                  <p className="text-sm text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-xl">
+                  <p className="text-xs sm:text-sm text-zinc-300 bg-[#141d3d] border border-white/5 p-3 rounded-xl leading-relaxed font-medium">
                     {transaction.description}
                   </p>
                 </div>
               )}
               {transaction.remarks && (
-                <div>
-                  <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-1">
-                    <FileText className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Admin Remarks</span>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-zinc-500 mb-1">
+                    <FileText className="h-3.5 w-3.5 text-red-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Admin Remarks</span>
                   </div>
-                  <p className="text-sm text-zinc-700 dark:text-zinc-300 bg-red-50 dark:bg-red-900/10 p-3 rounded-xl border border-red-100 dark:border-red-900/30">
+                  <p className="text-xs sm:text-sm text-red-400 bg-red-500/5 p-3 rounded-xl border border-red-500/10 leading-relaxed font-medium">
                     {transaction.remarks}
                   </p>
                 </div>
@@ -195,3 +212,5 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
     </div>
   )
 }
+
+
