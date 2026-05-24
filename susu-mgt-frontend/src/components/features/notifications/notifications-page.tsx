@@ -1,43 +1,27 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Bell, Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { useNotificationsStore } from '@/store'
+import { useNotifications, useUnreadCount, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/use-notifications'
 import { format } from 'date-fns'
 
 export function NotificationsPage() {
   const navigate = useNavigate()
-  const {
-    items,
-    meta,
-    unreadCount,
-    isLoadingList,
-    isMarkingAll,
-    fetchList,
-    fetchUnreadCount,
-    markRead,
-    markAllRead,
-  } = useNotificationsStore()
-
   const [page, setPage] = useState(1)
   const [limit] = useState(10)
 
-  useEffect(() => {
-    fetchList({ page, limit })
-  }, [page, limit, fetchList])
+  const { data, isLoading: isLoadingList } = useNotifications({ page, limit })
+  const { data: unreadData } = useUnreadCount()
+  const markReadMutation = useMarkNotificationRead()
+  const markAllMutation = useMarkAllNotificationsRead()
 
-  useEffect(() => {
-    fetchUnreadCount()
-  }, [fetchUnreadCount])
-
-  const totalPages = meta?.totalPages ?? 1
-
-  const unreadLabel = useMemo(() => {
-    return unreadCount > 9 ? '9+' : String(unreadCount)
-  }, [unreadCount])
+  const items = data?.data || []
+  const totalPages = data?.meta?.totalPages ?? 1
+  const unreadCount = unreadData?.unreadCount ?? 0
+  const unreadLabel = unreadCount > 9 ? '9+' : String(unreadCount)
 
   return (
     <div className="space-y-8 pb-12">
@@ -64,10 +48,8 @@ export function NotificationsPage() {
 
         <Button
           variant="outline"
-          onClick={async () => {
-            await markAllRead({ page, limit })
-          }}
-          disabled={isMarkingAll}
+          onClick={() => markAllMutation.mutate()}
+          disabled={markAllMutation.isPending}
           className="rounded-full"
         >
           <Check className="mr-2 h-4 w-4" />
@@ -98,8 +80,8 @@ export function NotificationsPage() {
                 return (
                   <button
                     key={n.id}
-                    onClick={async () => {
-                      if (isUnread) await markRead(n.id)
+                    onClick={() => {
+                      if (isUnread) markReadMutation.mutate(n.id)
                     }}
                     className={cn(
                       'w-full text-left px-6 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors',

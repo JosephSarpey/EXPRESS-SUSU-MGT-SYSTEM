@@ -20,7 +20,8 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuthStore, useNotificationsStore } from "@/store";
+import { useAuthStore } from "@/store";
+import { useNotifications, useUnreadCount, useMarkNotificationRead, useMarkAllNotificationsRead } from "@/hooks/use-notifications";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -163,17 +164,12 @@ export const sidebarItems: SidebarItem[] = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuthStore();
-  const {
-    items,
-    unreadCount,
-    isLoadingList,
-    isMarkingAll,
-    fetchList,
-    fetchUnreadCount,
-    markRead,
-    markAllRead,
-    reset: resetNotifications,
-  } = useNotificationsStore();
+  const { data: unreadData } = useUnreadCount();
+  const unreadCount = unreadData?.unreadCount ?? 0;
+  const { data: notificationsData, isLoading: isLoadingList } = useNotifications({ page: 1, limit: 10 });
+  const items = notificationsData?.data || [];
+  const markReadMutation = useMarkNotificationRead();
+  const markAllMutation = useMarkAllNotificationsRead();
   const location = useLocation();
   const navigate = useNavigate();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -243,49 +239,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     await logout();
-    resetNotifications();
     navigate("/login");
   };
 
-  useEffect(() => {
-    if (!user) return;
 
-    fetchUnreadCount();
-
-    let intervalId: number | null = null;
-
-    const start = () => {
-      if (intervalId !== null) return;
-      intervalId = window.setInterval(() => {
-        if (document.hidden) return;
-        fetchUnreadCount();
-      }, 30_000);
-    };
-
-    const stop = () => {
-      if (intervalId === null) return;
-      window.clearInterval(intervalId);
-      intervalId = null;
-    };
-
-    const handleVisibility = () => {
-      if (document.hidden) stop();
-      else start();
-    };
-
-    if (!document.hidden) start();
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    return () => {
-      stop();
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [user, fetchUnreadCount]);
-
-  useEffect(() => {
-    if (!isNotificationsOpen) return;
-    fetchList({ page: 1, limit: 10 });
-  }, [isNotificationsOpen, fetchList]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -325,34 +282,42 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-[#070c1e] flex selection:bg-emerald-500/30 w-full relative">
       {/* Desktop Sidebar (Hidden completely on small mobile layouts) */}
       <aside className="hidden md:flex w-64 flex-col bg-[#0f1630] text-white sticky top-0 h-screen shadow-xl border-r border-white/5 shrink-0">
-        <div className=" p-6 flex items-center gap-3  border-b border-white/5">
-          <div className="bg-blue-600 p-2 rounded-xl shadow-md transform -rotate-6">
-            <img src="../src/assets/logo2.png" alt="logo" className="h-6 w-6 object-contain" />
+        <div className=" p-6 flex items-center gap-1  border-b border-white/5">
+          <div className=" bg-blue-600 p-0 rounded-xl shadow-md transform -rotate-6">
+            <img
+              src="../src/assets/logo2.png"
+              alt="logo"
+              className="h-6 w-6 object-contain"
+            />
           </div>
           <a
             href="/"
-            className="font-bold text-lg uppercase tracking-wider text-white hover:text-blue-400 transition-colors"
+            className="font-bold text-md uppercase tracking-wider text-green-400 hover:text-blue-400 transition-colors"
           >
             {platformName}
           </a>
         </div>
-        
-        <nav className="flex-1 p-4 flex flex-col space-y-1.5 overflow-y-auto">
+
+        <nav className="text-xs flex-1 p-3 flex flex-col space-y-1 overflow-y-auto">
           {filteredItems.map((item) => (
             <Link
               key={item.href}
               to={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 group",
+                "flex items-center gap-3 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 group relative",
                 location.pathname === item.href
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/10 scale-[1.02]"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                   : "text-zinc-400 hover:bg-white/5 hover:text-white",
               )}
             >
-              <item.icon className={cn(
-                "h-4 w-4 shrink-0 transition-colors",
-                location.pathname === item.href ? "text-white" : "text-zinc-500 group-hover:text-white"
-              )} />
+              <item.icon
+                className={cn(
+                  "h-4 w-4 shrink-0 transition-colors",
+                  location.pathname === item.href
+                    ? "text-white"
+                    : "text-zinc-500 group-hover:text-white",
+                )}
+              />
               {item.name}
             </Link>
           ))}
@@ -371,23 +336,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Framework Content Body Viewport */}
       <div className="flex-1 flex flex-col min-w-0 w-full relative">
-        
         {/* Universal Header / Top Nav Bar */}
         <header className="flex h-16 bg-[#0f1630] border-b border-white/5 items-center justify-between px-4 md:px-8 sticky top-0 z-40 shadow-sm w-full">
-          
           {/* Left Layout Sector: Mobile Menu Trigger Icon */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="flex md:hidden p-2 text-zinc-400 hover:text-white transition-colors rounded-xl bg-white/5 border border-white/5 focus:outline-none"
             >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isMobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </button>
             <div className="text-xs sm:text-sm text-zinc-400 font-medium truncate max-w-[160px] sm:max-w-xs">
               Welcome back,{" "}
-              <span className="text-white font-bold">
-                {user?.fullName}
-              </span>
+              <span className="text-white font-bold">{user?.fullName}</span>
             </div>
           </div>
 
@@ -416,10 +381,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={async () => {
-                          await markAllRead();
-                        }}
-                        disabled={isMarkingAll}
+                        onClick={() => markAllMutation.mutate()}
+                        disabled={markAllMutation.isPending}
                         className="rounded-lg text-[10px] font-bold h-7 border-white/5 bg-[#141d3d] text-zinc-300 hover:bg-[#1c2957] hover:text-white transition-colors"
                       >
                         Mark read
@@ -459,22 +422,30 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                           <button
                             key={n.id}
                             onClick={async () => {
-                              if (isUnread) await markRead(n.id);
+                              if (isUnread) markReadMutation.mutate(n.id);
                             }}
                             className={cn(
                               "w-full text-left px-4 py-3.5 hover:bg-[#131c3d]/40 transition-all duration-200 flex flex-col gap-1 relative",
-                              isUnread && "bg-blue-500/5 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-blue-500",
+                              isUnread &&
+                                "bg-blue-500/5 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-blue-500",
                             )}
                           >
                             <div className="flex items-start justify-between gap-3 w-full">
-                              <span className={cn(
-                                "text-xs truncate flex-1 tracking-tight",
-                                isUnread ? "font-bold text-white" : "font-medium text-zinc-400"
-                              )}>
+                              <span
+                                className={cn(
+                                  "text-xs truncate flex-1 tracking-tight",
+                                  isUnread
+                                    ? "font-bold text-white"
+                                    : "font-medium text-zinc-400",
+                                )}
+                              >
                                 {n.subject ?? n.type}
                               </span>
                               <span className="text-[9px] font-medium text-zinc-500 shrink-0 mt-0.5">
-                                {format(new Date(n.createdAt), "MMM dd • HH:mm")}
+                                {format(
+                                  new Date(n.createdAt),
+                                  "MMM dd • HH:mm",
+                                )}
                               </span>
                             </div>
                             <p className="text-[11px] text-zinc-400 leading-relaxed line-clamp-2 pr-2">
@@ -546,10 +517,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
           {/**drop down on a smaller device */}
           {isMobileMenuOpen && (
-            <div ref={mobileMenuRef} className="md:hidden absolute top-16 left-0 right-0 w-full bg-[#0f1630] text-white border-b border-white/5 shadow-2xl z-50 flex flex-col animate-in fade-in slide-in-from-top-4 duration-200 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            <div
+              ref={mobileMenuRef}
+              className="md:hidden absolute top-16 left-0 right-0 w-full bg-[#0f1630] text-white border-b border-white/5 shadow-2xl z-50 flex flex-col animate-in fade-in slide-in-from-top-4 duration-200 max-h-[calc(100vh-4rem)] overflow-y-auto"
+            >
               <div className="p-4 flex items-center gap-3 border-b border-white/5 bg-[#0b1026]/60">
                 <div className="bg-blue-600 p-2 rounded-xl shadow-md transform -rotate-6">
-                  <img src="../src/assets/logo2.png" alt="logo" className="h-5 w-5 object-contain" />
+                  <img
+                    src="../src/assets/logo2.png"
+                    alt="logo"
+                    className="h-5 w-5 object-contain"
+                  />
                 </div>
                 <a
                   href="/"
@@ -558,7 +536,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   {platformName}
                 </a>
               </div>
-              
+
               <nav className="p-3 flex flex-col space-y-1">
                 {filteredItems.map((item) => (
                   <Link
@@ -588,13 +566,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           )}
-
         </header>
 
         {/* Primary Page Layout Inner Child Viewport Engine (Takes full screen space on mobile smoothly) */}
-        <main className="flex-1 overflow-y-auto max-w-full">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto max-w-full">{children}</main>
       </div>
     </div>
   );

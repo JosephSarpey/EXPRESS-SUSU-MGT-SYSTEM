@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   ArrowLeft,
   Search,
@@ -11,42 +11,29 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { adminService } from '@/services/api/admin.service'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
+import { useAdminUIStore } from '@/store/admin-ui-store'
+import { useWorkers } from '@/hooks/use-admin'
+import { useDebounce } from '@/hooks/use-debounce'
 
 export function WorkersPage() {
   const navigate = useNavigate()
-  const [workers, setWorkers] = useState<any[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  
+  const { search, setSearch, page, setPage, statusFilter, setStatusFilter } = useAdminUIStore(state => state.workers)
   const [limit] = useState(10)
-  const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  
+  const debouncedSearch = useDebounce(search, 300)
 
-  useEffect(() => {
-    fetchWorkers()
-  }, [page, limit, search, statusFilter])
+  const { data, isLoading } = useWorkers({
+    page,
+    limit,
+    search: debouncedSearch || undefined,
+    status: statusFilter || undefined
+  })
 
-  const fetchWorkers = async () => {
-    try {
-      setIsLoading(true)
-      const res = await adminService.listWorkers({ 
-        page, 
-        limit, 
-        search: search || undefined,
-        status: statusFilter || undefined
-      })
-      setWorkers(res.data || [])
-      setTotal(res.meta?.total || 0)
-    } catch (err) {
-      console.error('Error fetching workers:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
+  const workers = data?.data || []
+  const total = data?.meta?.total || 0
   const totalPages = Math.ceil(total / limit)
 
   const getStatusVariant = (status: string) => {

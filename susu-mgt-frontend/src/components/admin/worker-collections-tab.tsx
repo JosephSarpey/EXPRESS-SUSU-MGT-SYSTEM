@@ -1,6 +1,6 @@
 
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Search,
   History,
@@ -12,49 +12,28 @@ import {
 import { CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { adminService } from '@/services/api/admin.service'
 import { format } from 'date-fns'
 import { TransactionDetailsModal } from '@/components/features/transactions/transaction-details-modal'
 import { useDebounce } from '@/hooks/use-debounce'
-import { cn } from '@/lib/utils'
+
+import { useAdminUIStore } from '@/store/admin-ui-store'
+import { useWorkerCollections } from '@/hooks/use-admin'
 
 export function WorkerCollectionsTab() {
-  const [collections, setCollections] = useState<any[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  const { search, setSearch, page, setPage } = useAdminUIStore(state => state.workerCollections)
   const [limit] = useState(10)
-  const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<any | null>(null)
 
   const debouncedSearch = useDebounce(search, 300)
 
-  // Reset page to 1 on search change
-  useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch])
+  const { data, isLoading } = useWorkerCollections({
+    page,
+    limit,
+    search: debouncedSearch || undefined
+  })
 
-  useEffect(() => {
-    fetchCollections()
-  }, [page, limit, debouncedSearch])
-
-  const fetchCollections = async () => {
-    try {
-      setIsLoading(true)
-      const res = await adminService.getWorkerCollections({ 
-        page, 
-        limit,
-        search: debouncedSearch || undefined
-      })
-      setCollections(res.data || [])
-      setTotal(res.meta?.total || 0)
-    } catch (err) {
-      console.error('Error fetching worker collections:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
+  const collections = data?.data || []
+  const total = data?.meta?.total || 0
   const totalPages = Math.ceil(total / limit)
 
   return (
@@ -98,7 +77,7 @@ export function WorkerCollectionsTab() {
                   </tr>
                 ))
               ) : collections.length > 0 ? (
-                collections.map((tx) => (
+                collections.map((tx: any) => (
                   <tr key={tx.id} className="group hover:bg-[#131c3d]/60 transition-all duration-300 ease-out">
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2 min-w-0">
@@ -179,7 +158,7 @@ export function WorkerCollectionsTab() {
               </div>
             ))
           ) : collections.length > 0 ? (
-            collections.map((tx) => (
+            collections.map((tx: any) => (
               <div key={tx.id} className="py-3.5 space-y-2.5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -258,7 +237,7 @@ export function WorkerCollectionsTab() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
                 className="rounded-lg border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white text-[11px] font-bold h-8 disabled:opacity-40 transition-colors duration-300 flex-1 sm:flex-initial justify-center"
               >
@@ -267,7 +246,7 @@ export function WorkerCollectionsTab() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
                 className="rounded-lg border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white text-[11px] font-bold h-8 disabled:opacity-40 transition-colors duration-300 flex-1 sm:flex-initial justify-center"
               >

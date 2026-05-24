@@ -1,7 +1,7 @@
 
 
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   ArrowLeft, 
@@ -25,129 +25,125 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { usersService } from '@/services/api/users.service'
-import { adminService } from '@/services/api/admin.service'
 import { User as UserType } from '@/store/auth-store'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { CreateStaffDialog } from '@/components/admin/create-staff-dialog'
 import { useDebounce } from '@/hooks/use-debounce'
+import { useAdminUIStore } from '@/store/admin-ui-store'
+import { 
+  useUsers, 
+  useWalletDetails, 
+  useApproveUser, 
+  useDeactivateUser, 
+  useSuspendUser, 
+  useActivateUser, 
+  useLockWallet, 
+  useUnlockWallet 
+} from '@/hooks/use-admin'
+
+function WalletLockAction({ userId, disabled, className }: { userId: string, disabled: boolean, className?: string }) {
+  const { data: wallet } = useWalletDetails(userId)
+  const lockWallet = useLockWallet()
+  const unlockWallet = useUnlockWallet()
+
+  if (!wallet) return null
+
+  const isProcessing = lockWallet.isPending || unlockWallet.isPending || disabled
+  
+  return (
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      className={cn(
+        "h-7 w-7 rounded-md p-0 shrink-0 transition-colors",
+        wallet.isLocked ? "text-emerald-400 hover:bg-emerald-500/10" : "text-red-400 hover:bg-red-500/10",
+        className
+      )}
+      onClick={() => wallet.isLocked ? unlockWallet.mutate(userId) : lockWallet.mutate(userId)}
+      disabled={isProcessing}
+      title={wallet.isLocked ? "Unlock Wallet" : "Lock Wallet"}
+    >
+      {wallet.isLocked ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+    </Button>
+  )
+}
+
+function WalletDetailsCard({ userId }: { userId: string }) {
+  const { data: wallet } = useWalletDetails(userId)
+  if (!wallet) return null
+
+  return (
+    <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#161f3d] to-[#0c1229] border border-white/5 space-y-1 relative overflow-hidden group w-full shrink-0">
+      <div className="flex items-center justify-between relative z-10">
+        <div className="flex items-center gap-1.5">
+          <Wallet className="h-3.5 w-3.5 text-emerald-400" />
+          <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Wallet Balance</p>
+        </div>
+        {wallet.isLocked && (
+          <Badge className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wider border-none bg-red-500/10 text-red-400 px-1.5 py-0.2 rounded shrink-0">
+            <Lock className="h-2.5 w-2.5" /> LOCKED
+          </Badge>
+        )}
+      </div>
+      <p className="text-lg sm:text-xl font-black text-white relative z-10 tracking-tight">
+        {wallet.currency} {Number(wallet.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+      </p>
+    </div>
+  )
+}
 
 export function UserManagementPage() {
   const navigate = useNavigate()
-  const [users, setUsers] = useState<UserType[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  
+  const { 
+    search, setSearch,
+    statusFilter, setStatusFilter,
+    roleFilter, setRoleFilter,
+    page, setPage,
+    selectedUser, setSelectedUser
+  } = useAdminUIStore((state) => state.userManagement)
+
   const [limit] = useState(10)
-  const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState<string>('')
-  const [role, setRole] = useState<string>('')
-  const [isProcessing, setIsProcessing] = useState<string | null>(null)
-  const [selectedUser, setSelectedUser] = useState<UserType | null>(null)
-  const [userWallets, setUserWallets] = useState<Record<string, any>>({})
+  const debouncedSearch = useDebounce(search, 300)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
-  const debouncedSearch = useDebounce(search, 300)
+  const { data, isLoading } = useUsers({
+    page,
+    limit,
+    status: statusFilter || undefined,
+    role: roleFilter || undefined,
+    search: debouncedSearch || undefined
+  })
 
-  // Reset page to 1 when filters or search change
-  useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch, status, role])
-
-  useEffect(() => {
-    fetchUsers()
-  }, [page, limit, status, role, debouncedSearch])
-
-  const fetchUsers = async () => {
-    try {
-      setIsLoading(true)
-      const data = await usersService.getAllUsers({ 
-        page, 
-        limit,
-        status: status || undefined,
-        role: role || undefined,
-        search: debouncedSearch || undefined
-      })
-      setUsers(data.data)
-      setTotal(data.meta?.total || 0)
-      
-      // Fetch wallet info for these users
-      const wallets: Record<string, any> = {}
-      for (const user of data.data) {
-        try {
-          const wallet = await adminService.getWalletByUserId(user.id)
-          wallets[user.id] = wallet
-        } catch (e) {
-          console.warn(`Could not fetch wallet for user ${user.id}`)
-        }
-      }
-      setUserWallets(wallets)
-    } catch (err) {
-      console.error('Error fetching users:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleApprove = async (id: string) => {
-    try {
-      setIsProcessing(id)
-      await usersService.approveUser(id)
-      await fetchUsers()
-    } catch (err) {
-      console.error('Error approving user:', err)
-    } finally {
-      setIsProcessing(null)
-    }
-  }
-
-  const handleDeactivate = async (id: string) => {
-    if (!confirm('Are you sure you want to permanently deactivate this user?')) return
-    try {
-      setIsProcessing(id)
-      await usersService.deactivateUser(id)
-      await fetchUsers()
-    } catch (err) {
-      console.error('Error deactivating user:', err)
-    } finally {
-      setIsProcessing(null)
-    }
-  }
-
-  const handleToggleWalletLock = async (userId: string, isLocked: boolean) => {
-    try {
-      setIsProcessing(userId)
-      if (isLocked) {
-        await adminService.unlockWallet(userId)
-      } else {
-        await adminService.lockWallet(userId)
-      }
-      await fetchUsers()
-    } catch (err) {
-      console.error('Error toggling wallet lock:', err)
-    } finally {
-      setIsProcessing(null)
-    }
-  }
-
-  const handleToggleStatus = async (user: UserType) => {
-    try {
-      setIsProcessing(user.id)
-      if (user.status === 'ACTIVE') {
-        await usersService.suspendUser(user.id)
-      } else {
-        await usersService.activateUser(user.id)
-      }
-      await fetchUsers()
-    } catch (err) {
-      console.error('Error toggling user status:', err)
-    } finally {
-      setIsProcessing(null)
-    }
-  }
-
+  const users = data?.data || []
+  const total = data?.meta?.total || 0
   const totalPages = Math.ceil(total / limit)
+
+  const approveUser = useApproveUser()
+  const deactivateUser = useDeactivateUser()
+  const suspendUser = useSuspendUser()
+  const activateUser = useActivateUser()
+
+  const handleApprove = (id: string) => {
+    approveUser.mutate({ id, remarks: 'Account approved by admin' })
+  }
+
+  const handleDeactivate = (id: string) => {
+    if (!confirm('Are you sure you want to permanently deactivate this user?')) return
+    deactivateUser.mutate(id)
+  }
+
+  const handleToggleStatus = (user: UserType) => {
+    if (user.status === 'ACTIVE') {
+      suspendUser.mutate(user.id)
+    } else {
+      activateUser.mutate(user.id)
+    }
+  }
+
+  const isAnyProcessing = approveUser.isPending || deactivateUser.isPending || suspendUser.isPending || activateUser.isPending
+
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -203,8 +199,8 @@ export function UserManagementPage() {
             <div className="grid grid-cols-2 gap-2.5 w-full lg:w-auto sm:flex items-center">
               <div className="relative w-full">
                 <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
                   className="h-9 px-3 bg-[#141d3d] border border-white/5 rounded-lg text-[11px] font-bold text-zinc-300 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all cursor-pointer w-full sm:min-w-[120px] appearance-none"
                 >
                   <option value="">All Statuses</option>
@@ -220,8 +216,8 @@ export function UserManagementPage() {
 
               <div className="relative w-full">
                 <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
                   className="h-9 px-3 bg-[#141d3d] border border-white/5 rounded-lg text-[11px] font-bold text-zinc-300 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all cursor-pointer w-full sm:min-w-[110px] appearance-none"
                 >
                   <option value="">All Roles</option>
@@ -313,7 +309,7 @@ export function UserManagementPage() {
                               size="sm" 
                               className="h-7 w-7 rounded-md text-emerald-400 hover:bg-emerald-500/10 p-0 shrink-0"
                               onClick={() => handleApprove(user.id)}
-                              disabled={isProcessing === user.id}
+                              disabled={isAnyProcessing}
                               title="Approve User"
                             >
                               <ShieldCheck className="h-3.5 w-3.5" />
@@ -329,30 +325,16 @@ export function UserManagementPage() {
                                 user.status === 'ACTIVE' ? "text-amber-400 hover:bg-amber-500/10" : "text-emerald-400 hover:bg-emerald-500/10"
                               )}
                               onClick={() => handleToggleStatus(user)}
-                              disabled={isProcessing === user.id}
+                              disabled={isAnyProcessing}
                               title={user.status === 'ACTIVE' ? "Suspend User" : "Activate User"}
                             >
-                              {isProcessing === user.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : (
+                              {(suspendUser.isPending || activateUser.isPending) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : (
                                 user.status === 'ACTIVE' ? <UserMinus className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />
                               )}
                             </Button>
                           )}
 
-                          {userWallets[user.id] && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className={cn(
-                                "h-7 w-7 rounded-md p-0 shrink-0 transition-colors",
-                                userWallets[user.id].isLocked ? "text-emerald-400 hover:bg-emerald-500/10" : "text-red-400 hover:bg-red-500/10"
-                              )}
-                              onClick={() => handleToggleWalletLock(user.id, userWallets[user.id].isLocked)}
-                              disabled={isProcessing === user.id}
-                              title={userWallets[user.id].isLocked ? "Unlock Wallet" : "Lock Wallet"}
-                            >
-                              {userWallets[user.id].isLocked ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-                            </Button>
-                          )}
+                          <WalletLockAction userId={user.id} disabled={isAnyProcessing} />
 
                           {user.status !== 'DEACTIVATED' && (
                             <Button 
@@ -360,7 +342,7 @@ export function UserManagementPage() {
                               size="sm" 
                               className="h-7 w-7 rounded-md text-red-400 hover:bg-red-500/10 p-0 shrink-0"
                               onClick={() => handleDeactivate(user.id)}
-                              disabled={isProcessing === user.id}
+                              disabled={isAnyProcessing}
                               title="Deactivate User"
                             >
                               <ShieldAlert className="h-3.5 w-3.5" />
@@ -438,7 +420,7 @@ export function UserManagementPage() {
                           size="icon" 
                           className="h-7 w-7 rounded-lg text-emerald-400 bg-[#141d3d] border border-white/5 active:bg-[#1c2957]"
                           onClick={() => handleApprove(user.id)}
-                          disabled={isProcessing === user.id}
+                          disabled={isAnyProcessing}
                         >
                           <ShieldCheck className="h-3.5 w-3.5" />
                         </Button>
@@ -453,28 +435,15 @@ export function UserManagementPage() {
                             user.status === 'ACTIVE' ? "text-amber-400" : "text-emerald-400"
                           )}
                           onClick={() => handleToggleStatus(user)}
-                          disabled={isProcessing === user.id}
+                          disabled={isAnyProcessing}
                         >
-                          {isProcessing === user.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : (
+                          {(suspendUser.isPending || activateUser.isPending) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : (
                             user.status === 'ACTIVE' ? <UserMinus className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />
                           )}
                         </Button>
                       )}
 
-                      {userWallets[user.id] && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className={cn(
-                            "h-7 w-7 rounded-lg border border-white/5 active:bg-[#1c2957]",
-                            userWallets[user.id].isLocked ? "text-emerald-400" : "text-red-400"
-                          )}
-                          onClick={() => handleToggleWalletLock(user.id, userWallets[user.id].isLocked)}
-                          disabled={isProcessing === user.id}
-                        >
-                          {userWallets[user.id].isLocked ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-                        </Button>
-                      )}
+                      <WalletLockAction userId={user.id} disabled={isAnyProcessing} className="bg-[#141d3d] border-white/5 active:bg-[#1c2957]" />
 
                       {user.status !== 'DEACTIVATED' && (
                         <Button 
@@ -482,7 +451,7 @@ export function UserManagementPage() {
                           size="icon" 
                           className="h-7 w-7 rounded-lg text-red-400 bg-[#141d3d] border border-white/5 active:bg-[#1c2957]"
                           onClick={() => handleDeactivate(user.id)}
-                          disabled={isProcessing === user.id}
+                          disabled={isAnyProcessing}
                         >
                           <ShieldAlert className="h-3.5 w-3.5" />
                         </Button>
@@ -509,7 +478,7 @@ export function UserManagementPage() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
                   className="rounded-lg border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white text-[11px] font-bold h-8 disabled:opacity-40 transition-colors duration-300 flex-1 sm:flex-initial justify-center"
                 >
@@ -518,7 +487,7 @@ export function UserManagementPage() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}
                   className="rounded-lg border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white text-[11px] font-bold h-8 disabled:opacity-40 transition-colors duration-300 flex-1 sm:flex-initial justify-center"
                 >
@@ -601,24 +570,7 @@ export function UserManagementPage() {
                 </div>
               </div>
 
-              {userWallets[selectedUser.id] && (
-                <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#161f3d] to-[#0c1229] border border-white/5 space-y-1 relative overflow-hidden group w-full shrink-0">
-                  <div className="flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-1.5">
-                      <Wallet className="h-3.5 w-3.5 text-emerald-400" />
-                      <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Wallet Balance</p>
-                    </div>
-                    {userWallets[selectedUser.id].isLocked && (
-                      <Badge className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wider border-none bg-red-500/10 text-red-400 px-1.5 py-0.2 rounded shrink-0">
-                        <Lock className="h-2.5 w-2.5" /> LOCKED
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-lg sm:text-xl font-black text-white relative z-10 tracking-tight">
-                    {userWallets[selectedUser.id].currency} {Number(userWallets[selectedUser.id].balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-              )}
+              <WalletDetailsCard userId={selectedUser.id} />
             </CardContent>
 
             {/* Modal Actions Footer Area */}
@@ -666,7 +618,7 @@ export function UserManagementPage() {
       <CreateStaffDialog 
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
-        onSuccess={() => fetchUsers()}
+        onSuccess={() => {}}
       />
     </div>
   )

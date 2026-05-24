@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Transaction } from "@/services/api/transactions.service";
+import { Transaction, transactionsService } from "@/services/api/transactions.service";
 import { TransactionDetailsModal } from "@/components/features/transactions/transaction-details-modal";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -31,6 +31,7 @@ export function TransactionsPage() {
   const [type, setType] = useState<string>("");
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -50,6 +51,54 @@ export function TransactionsPage() {
   const transactions = data?.data || [];
   const total = data?.meta?.total || 0;
   const totalPages = data?.meta?.totalPages || 0;
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const response = await transactionsService.getMyTransactions({
+        limit: 1000,
+        search: debouncedSearch || undefined,
+        status: status || undefined,
+        type: type || undefined,
+      });
+
+      const dataToExport = response.data;
+      if (!dataToExport || dataToExport.length === 0) return;
+
+      const headers = ['Transaction ID', 'Type', 'Status', 'Payment Method', 'Amount (GHC)', 'Date', 'Time'];
+      const csvRows = [headers.join(',')];
+
+      dataToExport.forEach((tx) => {
+        const date = format(new Date(tx.createdAt), 'MMM dd yyyy');
+        const time = format(new Date(tx.createdAt), 'hh:mm a');
+        const amount = Number(tx.amount || 0).toFixed(2);
+        const row = [
+          tx.id,
+          tx.type,
+          tx.status,
+          tx.paymentMethod?.replace(/_/g, ' '),
+          amount,
+          date,
+          time
+        ].map(value => `"${value}"`); // escape fields properly
+        csvRows.push(row.join(','));
+      });
+
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `statement_${format(new Date(), 'yyyyMMdd_HHmmss')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to export statement', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#070c1e] text-white p-4 sm:p-6 md:p-10 font-sans selection:bg-emerald-500/30 space-y-6 sm:space-y-8 pb-12 animate-in fade-in duration-500">
@@ -75,10 +124,16 @@ export function TransactionsPage() {
         </div>
         <Button 
           variant="outline" 
+          onClick={handleExport}
+          disabled={isExporting || total === 0}
           className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-zinc-300 hover:text-white text-xs sm:text-sm font-bold transition-colors duration-300 h-11 px-4 sm:px-5 w-full sm:w-auto shrink-0 flex items-center justify-center gap-2"
         >
-          <Download className="h-4 w-4 text-emerald-400 shrink-0" />
-          <span>Export Statement</span>
+          {isExporting ? (
+            <svg className="animate-spin h-4 w-4 text-emerald-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          ) : (
+            <Download className="h-4 w-4 text-emerald-400 shrink-0" />
+          )}
+          <span>{isExporting ? 'Exporting...' : 'Export Statement'}</span>
         </Button>
       </div>
 
@@ -285,7 +340,7 @@ export function TransactionsPage() {
                       )}
                     </div>
                     <div className="space-y-1 min-w-0">
-                      <p className="font-bold text-sm text-zinc-200 flex items-center gap-2 flex-wrap">
+                      <div className="font-bold text-sm text-zinc-200 flex items-center gap-2 flex-wrap">
                         <span className="truncate leading-none">{tx.type}</span>
                         <Badge 
                           variant={getTransactionStatusVariant(tx.status)} 
@@ -300,7 +355,7 @@ export function TransactionsPage() {
                         >
                           {tx.status}
                         </Badge>
-                      </p>
+                      </div>
                       <p className="text-[11px] font-semibold text-zinc-500 leading-none">
                         {format(new Date(tx.createdAt), "MMM dd • hh:mm a")}
                       </p>

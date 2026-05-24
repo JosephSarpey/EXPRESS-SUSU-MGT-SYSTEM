@@ -12,34 +12,15 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { workersService } from '@/services/api/workers.service'
 import { format } from 'date-fns'
+import { useActiveSession, useWorkerDashboardStats } from '@/hooks/use-worker'
 import { cn } from '@/lib/utils'
 
 export function WorkerDashboard() {
-  const [session, setSession] = useState<any>(null)
-  const [stats, setStats] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  
-  useEffect(() => {
-    const fetchWorkerData = async () => {
-      try {
-        setIsLoading(true)
-        const [sessionData, statsData] = await Promise.all([
-          workersService.getActiveSession(),
-          workersService.getWorkerStats()
-        ])
-        setSession(sessionData)
-        setStats(statsData)
-      } catch (err) {
-        console.error('Error fetching worker data:', err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  const { data: session, isLoading: isSessionLoading } = useActiveSession()
+  const { data: stats, isLoading: isStatsLoading } = useWorkerDashboardStats()
 
-    fetchWorkerData()
-  }, [])
+  const isLoading = isSessionLoading || isStatsLoading
 
   if (isLoading) {
     return (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   ArrowLeft,
   Search,
@@ -14,77 +14,44 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { adminService } from '@/services/api/admin.service'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { useDebounce } from '@/hooks/use-debounce'
 import { cn } from '@/lib/utils'
+import { useAdminUIStore } from '@/store/admin-ui-store'
+import { useWallets, useLockWallet, useUnlockWallet } from '@/hooks/use-admin'
 
 export function WalletsPage() {
   const navigate = useNavigate()
-  const [wallets, setWallets] = useState<any[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  const { search, setSearch, page, setPage } = useAdminUIStore(state => state.wallets)
   const [limit] = useState(10)
-  const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [isProcessing, setIsProcessing] = useState<string | null>(null)
 
   const debouncedSearch = useDebounce(search, 300)
 
-  // Reset page to 1 on search change
-  useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch])
+  const { data, isLoading } = useWallets({
+    page,
+    limit,
+    search: debouncedSearch || undefined
+  })
 
-  useEffect(() => {
-    fetchWallets()
-  }, [page, limit, debouncedSearch])
-
-  const fetchWallets = async () => {
-    try {
-      setIsLoading(true)
-      const res = await adminService.listWallets({ 
-        page, 
-        limit, 
-        search: debouncedSearch || undefined 
-      })
-      setWallets(res.data || [])
-      setTotal(res.meta?.total || 0)
-    } catch (err) {
-      console.error('Error fetching wallets:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleLock = async (userId: string) => {
-    if (!confirm('Are you sure you want to lock this wallet?')) return
-    try {
-      setIsProcessing(userId)
-      await adminService.lockWallet(userId)
-      await fetchWallets()
-    } catch (err) {
-      console.error('Error locking wallet:', err)
-    } finally {
-      setIsProcessing(null)
-    }
-  }
-
-  const handleUnlock = async (userId: string) => {
-    if (!confirm('Are you sure you want to unlock this wallet?')) return
-    try {
-      setIsProcessing(userId)
-      await adminService.unlockWallet(userId)
-      await fetchWallets()
-    } catch (err) {
-      console.error('Error unlocking wallet:', err)
-    } finally {
-      setIsProcessing(null)
-    }
-  }
-
+  const wallets = data?.data || []
+  const total = data?.meta?.total || 0
   const totalPages = Math.ceil(total / limit)
+
+  const lockWallet = useLockWallet()
+  const unlockWallet = useUnlockWallet()
+
+  const handleLock = (userId: string) => {
+    if (!confirm('Are you sure you want to lock this wallet?')) return
+    lockWallet.mutate(userId)
+  }
+
+  const handleUnlock = (userId: string) => {
+    if (!confirm('Are you sure you want to unlock this wallet?')) return
+    unlockWallet.mutate(userId)
+  }
+
+  const isProcessing = lockWallet.isPending ? lockWallet.variables : (unlockWallet.isPending ? unlockWallet.variables : null)
 
   return (
     <div className="min-h-screen bg-[#070c1e] text-white md: font-sans selection:bg-emerald-500/30 space-y-8 pb-12 animate-in fade-in duration-500">

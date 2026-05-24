@@ -388,7 +388,13 @@ export class TransactionsService {
     });
 
     if (existing) {
-      return { tx: existing, currency: wallet.currency };
+      // Update referenceId to prevent "Duplicate Transaction Reference" from Paystack on retries
+      const newReferenceId = generateReference('ps');
+      const updatedTx = await this.prisma.transaction.update({
+        where: { id: existing.id },
+        data: { referenceId: newReferenceId }
+      });
+      return { tx: updatedTx, currency: wallet.currency };
     }
 
     const referenceId = generateReference('ps');

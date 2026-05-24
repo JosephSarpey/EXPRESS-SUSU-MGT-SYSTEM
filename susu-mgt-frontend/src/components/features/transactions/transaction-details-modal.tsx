@@ -1,11 +1,18 @@
 
 
-import { X, Receipt, Clock, CreditCard, Hash, Activity, FileText, User, Users, MapPin } from 'lucide-react'
+import { X, Receipt, Clock, CreditCard, Hash, Activity, FileText, User, Users, MapPin, Loader2 } from 'lucide-react'
 import { Transaction } from '@/services/api/transactions.service'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
 import { getTransactionStatusVariant } from '@/store'
 import { cn } from '@/lib/utils'
+import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { usePaystackPayment } from 'react-paystack'
+import { paymentsService } from '@/services/api/payments.service'
+import { transactionKeys } from '@/hooks/use-transactions'
+import { useAuthStore } from '@/store'
 
 interface TransactionDetailsModalProps {
   transaction: Transaction | null
@@ -13,6 +20,44 @@ interface TransactionDetailsModalProps {
 }
 
 export function TransactionDetailsModal({ transaction, onClose }: TransactionDetailsModalProps) {
+  const queryClient = useQueryClient()
+  const { user } = useAuthStore()
+  const [isInitializing, setIsInitializing] = useState(false)
+  const [paystackConfig, setPaystackConfig] = useState<any>(null)
+  
+  const initializePayment = usePaystackPayment(paystackConfig || {})
+
+  const handleRetry = async () => {
+    try {
+      setIsInitializing(true)
+      const initData = await paymentsService.initializePaystack(Number(transaction!.amount))
+      
+      const config = {
+        reference: initData.referenceId,
+        email: user?.email || transaction?.user?.email,
+        amount: Number(transaction!.amount) * 100,
+        currency: initData.currency,
+        accessCode: initData.accessCode, 
+        publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_sample',
+      }
+      setPaystackConfig(config)
+    } catch (err: any) {
+      console.error('Error initializing retry payment:', err)
+    } finally {
+      setIsInitializing(false)
+    }
+  }
+
+  const onSuccess = async (reference: any) => {
+    try {
+      await paymentsService.verifyPaystackTransaction(reference.reference)
+      queryClient.invalidateQueries({ queryKey: transactionKeys.all })
+      onClose()
+    } catch (err: any) {
+      console.error('Payment verification failed', err)
+    }
+  }
+
   if (!transaction) return null
 
   const getTypeColor = (type: string) => {
@@ -203,6 +248,38 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
                     {transaction.remarks}
                   </p>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          {(transaction.status === 'PENDING' || transaction.status === 'FAILED') && transaction.type === 'DEPOSIT' && transaction.paymentMethod !== 'CASH' && (
+            <div className="pt-4 border-t border-white/5">
+              {!paystackConfig ? (
+                <Button 
+                  onClick={handleRetry} 
+                  disabled={isInitializing}
+                  className="w-full h-12 text-xs font-bold uppercase tracking-wider rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all duration-200"
+                >
+                  {isInitializing ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Initializing...</span>
+                    </div>
+                  ) : (
+                    'Retry Payment'
+                  )}
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => {
+                    // @ts-ignore
+                    initializePayment(onSuccess, () => setPaystackConfig(null))
+                  }}
+                  className="w-full h-12 text-xs font-bold uppercase tracking-wider rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg transition-all duration-200"
+                >
+                  Complete Secure Checkout
+                </Button>
               )}
             </div>
           )}

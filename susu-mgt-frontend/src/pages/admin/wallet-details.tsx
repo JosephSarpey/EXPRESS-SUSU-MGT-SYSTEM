@@ -1,5 +1,4 @@
 
-import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -15,71 +14,34 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { adminService } from '@/services/api/admin.service'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { useWalletDetails, useWalletTransactions, useLockWallet, useUnlockWallet } from '@/hooks/use-admin'
 
 export function WalletDetailsPage() {
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
-  const [wallet, setWallet] = useState<any>(null)
-  const [transactions, setTransactions] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isProcessing, setIsProcessing] = useState(false)
 
-  useEffect(() => {
-    if (userId) {
-      fetchWalletDetails()
-      fetchWalletTransactions()
-    }
-  }, [userId])
+  const { data: wallet, isLoading: isWalletLoading } = useWalletDetails(userId!)
+  const { data: txData, isLoading: isTxLoading } = useWalletTransactions(userId!)
+  
+  const transactions = txData?.data || []
+  const isLoading = isWalletLoading || isTxLoading
 
-  const fetchWalletDetails = async () => {
-    try {
-      setIsLoading(true)
-      const res = await adminService.getWalletByUserId(userId!)
-      setWallet(res)
-    } catch (err) {
-      console.error('Error fetching wallet details:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const lockWallet = useLockWallet()
+  const unlockWallet = useUnlockWallet()
 
-  const fetchWalletTransactions = async () => {
-    try {
-      const res = await adminService.getTransactions({ userId })
-      setTransactions(res.data || [])
-    } catch (err) {
-      console.error('Error fetching wallet transactions:', err)
-    }
-  }
-
-  const handleLock = async () => {
+  const handleLock = () => {
     if (!confirm('Are you sure you want to lock this wallet?')) return
-    try {
-      setIsProcessing(true)
-      await adminService.lockWallet(userId!)
-      await fetchWalletDetails()
-    } catch (err) {
-      console.error('Error locking wallet:', err)
-    } finally {
-      setIsProcessing(false)
-    }
+    lockWallet.mutate(userId!)
   }
 
-  const handleUnlock = async () => {
+  const handleUnlock = () => {
     if (!confirm('Are you sure you want to unlock this wallet?')) return
-    try {
-      setIsProcessing(true)
-      await adminService.unlockWallet(userId!)
-      await fetchWalletDetails()
-    } catch (err) {
-      console.error('Error unlocking wallet:', err)
-    } finally {
-      setIsProcessing(false)
-    }
+    unlockWallet.mutate(userId!)
   }
+
+  const isProcessing = lockWallet.isPending || unlockWallet.isPending
 
   const getTransactionIcon = (type: string) => {
     switch (type) {

@@ -1,6 +1,6 @@
 
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   ArrowLeft, 
@@ -19,67 +19,43 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { adminService } from '@/services/api/admin.service'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { WorkerCollectionsTab } from '@/components/admin/worker-collections-tab'
 import { useDebounce } from '@/hooks/use-debounce'
+import { useAdminUIStore } from '@/store/admin-ui-store'
+import { useWorkerSessions, useTerminateSession } from '@/hooks/use-admin'
 
 export function WorkerManagementPage() {
   const navigate = useNavigate()
-  const [sessions, setSessions] = useState<any[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [limit] = useState(10)
-  const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [isProcessing, setIsProcessing] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'sessions' | 'collections'>('sessions')
-  const [selectedSession, setSelectedSession] = useState<any | null>(null)
+  
+  const {
+    search, setSearch,
+    page, setPage,
+    activeTab, setActiveTab,
+    selectedSession, setSelectedSession
+  } = useAdminUIStore((state) => state.workerManagement)
 
+  const [limit] = useState(10)
   const debouncedSearch = useDebounce(search, 300)
 
-  // Reset page to 1 on search change
-  useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch])
+  const { data, isLoading } = useWorkerSessions({
+    page,
+    limit,
+    search: debouncedSearch || undefined
+  })
 
-  useEffect(() => {
-    if (activeTab === 'sessions') {
-      fetchSessions()
-    }
-  }, [page, limit, activeTab, debouncedSearch])
-
-  const fetchSessions = async () => {
-    try {
-      setIsLoading(true)
-      const res = await adminService.getWorkerSessions({ 
-        page, 
-        limit,
-        search: debouncedSearch || undefined
-      })
-      setSessions(res.data || [])
-      setTotal(res.meta?.total || 0)
-    } catch (err) {
-      console.error('Error fetching worker sessions:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleTerminate = async (sessionId: string) => {
-    try {
-      setIsProcessing(sessionId)
-      await adminService.terminateWorkerSession(sessionId)
-      await fetchSessions()
-    } catch (err) {
-      console.error('Error terminating session:', err)
-    } finally {
-      setIsProcessing(null)
-    }
-  }
-
+  const sessions = data?.data || []
+  const total = data?.meta?.total || 0
   const totalPages = Math.ceil(total / limit)
+
+  const terminateSession = useTerminateSession()
+
+  const handleTerminate = (sessionId: string) => {
+    terminateSession.mutate(sessionId)
+  }
+
+  const isProcessing = terminateSession.isPending ? terminateSession.variables : null
 
   return (
     <div className="min-h-screen bg-[#070c1e] text-white p-4 sm:p-6 md:p-10 font-sans selection:bg-emerald-500/30 space-y-6 sm:space-y-8 pb-12 animate-in fade-in duration-500">
@@ -176,7 +152,7 @@ export function WorkerManagementPage() {
                         </tr>
                       ))
                     ) : sessions.length > 0 ? (
-                      sessions.map((session) => (
+                      sessions.map((session: any) => (
                         <tr key={session.id} className="group hover:bg-[#131c3d]/60 transition-all duration-300 ease-out">
                           <td className="px-4 lg:px-6 py-4.5">
                             <div className="flex items-center gap-3 min-w-0">
@@ -258,7 +234,7 @@ export function WorkerManagementPage() {
                     </div>
                   ))
                 ) : sessions.length > 0 ? (
-                  sessions.map((session) => (
+                  sessions.map((session: any) => (
                     <div key={session.id} className="py-4.5 space-y-3.5">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
@@ -346,7 +322,7 @@ export function WorkerManagementPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
                   className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white text-xs font-bold disabled:opacity-40 transition-colors duration-300 flex-1 sm:flex-initial justify-center"
                 >
@@ -355,7 +331,7 @@ export function WorkerManagementPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}
                   className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white text-xs font-bold disabled:opacity-40 transition-colors duration-300 flex-1 sm:flex-initial justify-center"
                 >

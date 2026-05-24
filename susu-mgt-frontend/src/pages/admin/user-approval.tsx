@@ -1,7 +1,7 @@
 
 
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   ArrowLeft, 
@@ -20,77 +20,42 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { usersService } from '@/services/api/users.service'
-import { User } from '@/store/auth-store'
 import { format } from 'date-fns'
 import { useDebounce } from '@/hooks/use-debounce'
+import { useAdminUIStore } from '@/store/admin-ui-store'
+import { usePendingUsers, useApproveUser, useDeactivateUser } from '@/hooks/use-admin'
 
 export function UserApprovalPage() {
   const navigate = useNavigate()
-  const [pendingUsers, setPendingUsers] = useState<User[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  const { search, setSearch, page, setPage } = useAdminUIStore(state => state.userApproval)
   const [limit] = useState(10)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isProcessing, setIsProcessing] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
   const [remarks, setRemarks] = useState<string>('')
 
   const debouncedSearch = useDebounce(search, 300)
 
-  // Reset page to 1 on search change
-  useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch])
+  const { data, isLoading } = usePendingUsers({
+    page,
+    limit,
+    search: debouncedSearch || undefined
+  })
 
-  useEffect(() => {
-    fetchPendingUsers()
-  }, [page, limit, debouncedSearch])
-
-  const fetchPendingUsers = async () => {
-    try {
-      setIsLoading(true)
-      const data = await usersService.getAllUsers({ 
-        page, 
-        limit, 
-        status: 'PENDING',
-        search: debouncedSearch || undefined
-      })
-      setPendingUsers(data.data)
-      setTotal(data.meta?.total || 0)
-    } catch (err) {
-      console.error('Error fetching pending users:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
+  const pendingUsers = data?.data || []
+  const total = data?.meta?.total || 0
   const totalPages = Math.ceil(total / limit)
 
-  const handleApprove = async (id: string) => {
-    try {
-      setIsProcessing(id)
-      await usersService.approveUser(id, remarks || 'Account approved by admin')
-      setPendingUsers(users => users.filter(u => u.id !== id))
-      setRemarks('')
-    } catch (err) {
-      console.error('Error approving user:', err)
-    } finally {
-      setIsProcessing(null)
-    }
+  const approveUser = useApproveUser()
+  const deactivateUser = useDeactivateUser()
+
+  const handleApprove = (id: string) => {
+    approveUser.mutate({ id, remarks: remarks || 'Account approved by admin' })
+    setRemarks('')
   }
 
-  const handleReject = async (id: string) => {
-    try {
-      setIsProcessing(id)
-      await usersService.deactivateUser(id) // Use deactivate as rejection for now
-      setPendingUsers(users => users.filter(u => u.id !== id))
-    } catch (err) {
-      console.error('Error rejecting user:', err)
-    } finally {
-      setIsProcessing(null)
-    }
+  const handleReject = (id: string) => {
+    deactivateUser.mutate(id)
   }
+
+  const isProcessing = approveUser.isPending ? approveUser.variables?.id : (deactivateUser.isPending ? deactivateUser.variables : null)
 
   return (
     <div className="min-h-screen bg-[#070c1e] text-white p-6 md:p-10 font-sans selection:bg-emerald-500/30 space-y-8 pb-12 animate-in fade-in duration-500">
@@ -234,7 +199,7 @@ export function UserApprovalPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    onClick={() => setPage(Math.max(1, page - 1))}
                     disabled={page === 1}
                     className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white disabled:opacity-40 transition-colors duration-300"
                   >
@@ -243,7 +208,7 @@ export function UserApprovalPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() => setPage(Math.min(totalPages, page + 1))}
                     disabled={page === totalPages}
                     className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white disabled:opacity-40 transition-colors duration-300"
                   >

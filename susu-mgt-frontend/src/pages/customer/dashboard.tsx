@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useRef } from 'react'
+
 import { Link } from 'react-router-dom'
 import logo from "../../assets/logo2.png";
 import { 
@@ -21,87 +21,25 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { walletsService, Wallet as WalletType } from '@/services/api/wallets.service'
-import { transactionsService, Transaction } from '@/services/api/transactions.service'
+import { useMyWallet, useWalletStats } from '@/hooks/use-customer'
+import { useMyTransactions } from '@/hooks/use-transactions'
+
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { useAuthStore, useNotificationsStore } from "@/store"
+import { useAuthStore } from "@/store"
 
 export function CustomerDashboard() {
   useAuthStore()
-  
-  // Notification Store Hook Elements
-  const {
-    fetchList,
-  } = useNotificationsStore()
 
-  const [wallet, setWallet] = useState<WalletType | null>(null)
-  const [stats, setStats] = useState<{ totalDeposited: number, totalWithdrawn: number } | null>(null)
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
-  const [, setIsProfileOpen] = useState(false)
-  
-  const notificationsRef = useRef<HTMLDivElement | null>(null)
-  const profileRef = useRef<HTMLDivElement | null>(null)
+  const { data: wallet, isLoading: isWalletLoading, error: walletError } = useMyWallet()
+  const { data: stats, isLoading: isStatsLoading } = useWalletStats()
+  const { data: transactionsData, isLoading: isTxLoading } = useMyTransactions({ limit: 5 })
 
-  useEffect(() => {
-    let isMounted = true
-    
-    const fetchDashboardData = async () => {
-      try {
-        setIsLoading(true)
-        const [walletData, statsData, transactionsData] = await Promise.all([
-          walletsService.getMyWallet(),
-          walletsService.getWalletStats(),
-          transactionsService.getMyTransactions({ limit: 5 })
-        ])
-        
-        if (isMounted) {
-          setWallet(walletData)
-          setStats(statsData)
-          setRecentTransactions(transactionsData.data)
-        }
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err)
-        if (isMounted) {
-          setError('Failed to load dashboard data. Please try again later.')
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
-    }
+  const recentTransactions = transactionsData?.data || []
+  const isLoading = isWalletLoading || isStatsLoading || isTxLoading
+  const error = walletError ? 'Failed to load dashboard data. Please try again later.' : null
 
-    fetchDashboardData()
-    return () => { isMounted = false }
-  }, [])
 
-  // Notification population layer sync
-  useEffect(() => {
-    if (!isNotificationsOpen) return
-    fetchList({ page: 1, limit: 10 })
-  }, [isNotificationsOpen, fetchList])
-
-  // Shared outside clicks tracking engine
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node | null
-      if (!target) return
-
-      if (notificationsRef.current && !notificationsRef.current.contains(target)) {
-        setIsNotificationsOpen(false)
-      }
-
-      if (profileRef.current && !profileRef.current.contains(target)) {
-        setIsProfileOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
 
   if (isLoading) {
     return (
