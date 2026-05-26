@@ -109,7 +109,7 @@ export function WalletsPage() {
                     </tr>
                   ))
                 ) : wallets.length > 0 ? (
-                  wallets.map((wallet) => (
+                  wallets.map((wallet: any) => (
                     <tr key={wallet.id} className="group hover:bg-[#131c3d]/60 transition-all duration-300 ease-out">
                       <td className="px-6 py-5.5">
                         <div className="flex items-center gap-3.5">
@@ -219,7 +219,7 @@ export function WalletsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
                   className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white disabled:opacity-40 transition-colors duration-300"
                 >
@@ -228,7 +228,7 @@ export function WalletsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}
                   className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-white disabled:opacity-40 transition-colors duration-300"
                 >

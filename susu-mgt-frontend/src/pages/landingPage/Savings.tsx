@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./landingPage.css";
 
 // 1. Reusable Intersection Observer Hook

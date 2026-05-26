@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import bgImage from "../../assets/bgimg.png";
@@ -22,8 +22,7 @@ const HeroSection = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Shared ultra-smooth transition class
-  const smoothTransition = "transition-all duration-[1500ms] cubic-bezier(0.33, 1, 0.68, 1)";
+
 
   return (
     <section 

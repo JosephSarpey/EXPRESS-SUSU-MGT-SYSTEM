@@ -1,9 +1,9 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode }): UserConfig => {
   // Load env vars for the current mode (development, production, etc.)
   const env = loadEnv(mode, process.cwd(), "");
 
@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
       outDir: "dist",
 
       // Generate sourcemaps for debugging production issues
-      sourcemap: true,
+      sourcemap: false,
 
       // Warn if a chunk exceeds 500 KB
       chunkSizeWarningLimit: 500,

@@ -21,7 +21,12 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuthStore } from "@/store";
-import { useNotifications, useUnreadCount, useMarkNotificationRead, useMarkAllNotificationsRead } from "@/hooks/use-notifications";
+import {
+  useNotifications,
+  useUnreadCount,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+} from "@/hooks/use-notifications";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -166,7 +171,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuthStore();
   const { data: unreadData } = useUnreadCount();
   const unreadCount = unreadData?.unreadCount ?? 0;
-  const { data: notificationsData, isLoading: isLoadingList } = useNotifications({ page: 1, limit: 10 });
+  const { data: notificationsData, isLoading: isLoadingList } =
+    useNotifications({ page: 1, limit: 10 });
   const items = notificationsData?.data || [];
   const markReadMutation = useMarkNotificationRead();
   const markAllMutation = useMarkAllNotificationsRead();
@@ -241,8 +247,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     await logout();
     navigate("/login");
   };
-
-
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -385,7 +389,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                         disabled={markAllMutation.isPending}
                         className="rounded-lg text-[10px] font-bold h-7 border-white/5 bg-[#141d3d] text-zinc-300 hover:bg-[#1c2957] hover:text-white transition-colors"
                       >
-                        Mark read
+                        Mark all as read
                       </Button>
                       <Button
                         variant="ghost"

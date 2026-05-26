@@ -108,7 +108,7 @@ export function WorkersPage() {
                     </tr>
                   ))
                 ) : workers.length > 0 ? (
-                  workers.map((worker) => (
+                  workers.map((worker: any) => (
                     <tr key={worker.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -187,7 +187,7 @@ export function WorkersPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
                   className="rounded-xl"
                 >
@@ -196,7 +196,7 @@ export function WorkersPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}
                   className="rounded-xl"
                 >

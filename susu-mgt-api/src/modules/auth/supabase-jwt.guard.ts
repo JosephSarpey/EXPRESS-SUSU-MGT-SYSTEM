@@ -40,7 +40,7 @@ export class SupabaseJwtGuard implements CanActivate {
 
     let token = '';
     const authHeader = request.headers?.authorization as string | undefined;
-    
+
     if (authHeader) {
       const [scheme, credentials] = authHeader.split(' ');
       if (scheme === 'Bearer' && credentials) {

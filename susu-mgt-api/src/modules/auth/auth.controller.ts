@@ -78,7 +78,7 @@ export class AuthController {
       response.cookie('sb-access-token', data.session.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: 'strict',
         maxAge: data.session.expires_in * 1000,
         path: '/',
       });
@@ -98,9 +98,11 @@ export class AuthController {
     @Request() req: { headers: { authorization: string } },
     @Res({ passthrough: true }) response: Response,
   ) {
+    const cookies = (req as any).cookies as
+      | Record<string, string | undefined>
+      | undefined;
     const token =
-      req.headers.authorization?.split(' ')[1] ||
-      (req as any).cookies?.['sb-access-token'];
+      req.headers.authorization?.split(' ')[1] || cookies?.['sb-access-token'];
 
     if (token) {
       await this.supabaseService.signOut(token);
@@ -110,7 +112,7 @@ export class AuthController {
       path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
     });
 
     return { message: 'Signed out successfully' };

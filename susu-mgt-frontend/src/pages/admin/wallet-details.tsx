@@ -22,8 +22,8 @@ export function WalletDetailsPage() {
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
 
-  const { data: wallet, isLoading: isWalletLoading } = useWalletDetails(userId!)
-  const { data: txData, isLoading: isTxLoading } = useWalletTransactions(userId!)
+  const { data: wallet, isLoading: isWalletLoading, refetch: fetchWalletDetails } = useWalletDetails(userId!)
+  const { data: txData, isLoading: isTxLoading, refetch: fetchWalletTransactions } = useWalletTransactions(userId!)
   
   const transactions = txData?.data || []
   const isLoading = isWalletLoading || isTxLoading
@@ -216,7 +216,7 @@ export function WalletDetailsPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={fetchWalletDetails}
+              onClick={() => fetchWalletDetails()}
               className="h-8 w-8 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
             >
               <RefreshCw className="h-4 w-4" />
@@ -246,7 +246,7 @@ export function WalletDetailsPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={fetchWalletTransactions}
+              onClick={() => fetchWalletTransactions()}
               className="h-8 w-8 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
             >
               <RefreshCw className="h-4 w-4" />
@@ -267,7 +267,7 @@ export function WalletDetailsPage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {transactions.length > 0 ? (
-                  transactions.map((tx) => (
+                  transactions.map((tx: any) => (
                     <tr key={tx.id} className="group hover:bg-[#131c3d]/60 transition-all duration-300 ease-out">
                       <td className="px-6 py-5.5">
                         <div className="flex items-center gap-3.5">
