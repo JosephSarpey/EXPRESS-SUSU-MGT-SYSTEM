@@ -1,4 +1,4 @@
-import { apiClient } from './client'
+import { apiClient, setAccessToken } from './client'
 import { User } from '@/store/auth-store'
 
 export interface AuthResponse {
@@ -26,6 +26,10 @@ export interface SignUpDto {
 export const authService = {
   signIn: async (data: SignInDto): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/signin', data)
+    // Store access token for Bearer header on subsequent requests
+    if (response.data.session?.access_token) {
+      setAccessToken(response.data.session.access_token)
+    }
     return response.data
   },
 
@@ -36,6 +40,7 @@ export const authService = {
 
   signOut: async () => {
     await apiClient.post('/auth/signout')
+    setAccessToken(null)
   },
 
   getMe: async (): Promise<User> => {

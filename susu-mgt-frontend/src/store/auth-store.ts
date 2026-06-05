@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { authService } from '@/services/api/auth.service'
+import { setAccessToken } from '@/services/api/client'
 
 export interface User {
   id: string
@@ -41,6 +42,7 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Logout error:', error)
         } finally {
+          setAccessToken(null)
           set({ user: null, isAuthenticated: false, isLoading: false })
           localStorage.removeItem('auth-storage')
         }
