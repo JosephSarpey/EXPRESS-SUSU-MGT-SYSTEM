@@ -33,9 +33,9 @@ const HeroSection = () => {
       <div className="glow-blob absolute bottom-0 left-1/3 h-[300px] w-[300px] bg-teal-500" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-6">
-        <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:gap-16">
-          {/* LEFT COLUMN — Headlines & CTAs */}
-          <div className="flex flex-1 flex-col items-center text-center lg:items-start lg:text-left">
+        <div className="flex flex-col items-center gap-12">
+          {/* UNIFIED — Headlines & CTAs */}
+          <div className="flex flex-col items-center text-center">
             {/* Main Headline */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
@@ -93,11 +93,10 @@ const HeroSection = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.65 }}
-              className="mt-10 flex flex-wrap items-center justify-center gap-6 lg:justify-start"
+              className="mt-10 flex flex-wrap items-center justify-center gap-6"
             >
-              {[
-                { icon: TrendingUp, label: "20+ Years of Service" },
-                { icon: Shield, label: "Secure & Licensed" },
+              {[              
+                { icon: Shield, label: "Secure & Fast" },
                 { icon: Zap, label: "Instant Deposits" },
               ].map((item, idx) => (
                 <div
@@ -111,15 +110,15 @@ const HeroSection = () => {
             </motion.div>
           </div>
 
-          {/* RIGHT COLUMN — Animated Mock Dashboard */}
+          {/* DASHBOARD CARD — Mobile First & Responsive */}
           <motion.div
             initial={{ opacity: 0, y: 40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.9, delay: 0.3, ease: "easeOut" }}
-            className="relative flex flex-1 justify-center lg:justify-end"
+            className="relative w-full flex justify-center sm:max-w-md lg:max-w-sm"
           >
             {/* Main Dashboard Card */}
-            <div className="relative w-full max-w-sm sm:max-w-md">
+            <div className="relative w-full">
               {/* Backglow behind card */}
               <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-transparent to-emerald-500/5 blur-2xl" />
 

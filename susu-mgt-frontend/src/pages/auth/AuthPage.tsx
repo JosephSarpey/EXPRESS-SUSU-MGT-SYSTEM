@@ -15,7 +15,7 @@ import {
   ArrowRight,
   ArrowLeft,
 } from "lucide-react";
-import logo from "../../assets/logo2.png";
+import logo from "../../assets/logo2.jpg";
 import "./auth-page.css";
 
 export function AuthPage() {
@@ -138,12 +138,12 @@ export function AuthPage() {
         <div className="background-shape"></div>
         <div className="secondary-shape"></div>
 
-        {/* ================= LOGIN PANEL ================= */}
+        {/* LOGIN PANEL */}
         <div className="credentials-panel signin">
           <div className="brand-header slide-element">
             <img className="brand-logo" src={logo} alt="Express Capital Logo" />
             <p className="brand-subtitle">
-              EXPRESS <span>CAPITAL</span>
+              UNIQUE <span>CAPITAL</span>
             </p>
           </div>
 

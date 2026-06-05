@@ -289,7 +289,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <div className=" p-6 flex items-center gap-1  border-b border-white/5">
           <div className=" bg-blue-600 p-0 rounded-xl shadow-md transform -rotate-6">
             <img
-              src="../src/assets/logo2.png"
+              src="../src/assets/logo2.jpg"
               alt="logo"
               className="h-6 w-6 object-contain"
             />
@@ -528,7 +528,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <div className="p-4 flex items-center gap-3 border-b border-white/5 bg-[#0b1026]/60">
                 <div className="bg-blue-600 p-2 rounded-xl shadow-md transform -rotate-6">
                   <img
-                    src="../src/assets/logo2.png"
+                    src="../src/assets/logo2.jpg"
                     alt="logo"
                     className="h-5 w-5 object-contain"
                   />

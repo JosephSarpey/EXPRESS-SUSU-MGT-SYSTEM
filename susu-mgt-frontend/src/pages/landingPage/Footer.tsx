@@ -7,7 +7,7 @@ import {
   Linkedin,
   Sparkles,
 } from "lucide-react";
-import logo from "../../assets/logo2.png";
+import logo from "../../assets/logo2.jpg";
 
 const Footer = () => {
   const [email, setEmail] = useState("");

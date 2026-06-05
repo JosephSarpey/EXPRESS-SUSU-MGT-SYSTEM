@@ -2,15 +2,11 @@ import { defineConfig, loadEnv, UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }): UserConfig => {
-  // Load env vars for the current mode (development, production, etc.)
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
     plugins: [react()],
-
-    // Set base path — use "/" for root deployments, change if deploying to a subdirectory
     base: "/",
 
     resolve: {
@@ -29,49 +25,52 @@ export default defineConfig(({ mode }): UserConfig => {
       },
     },
 
+    // Strips logs globally using ESBuild instead of Terser for 10x faster builds
+    esbuild: {
+      drop: mode === "production" ? ["console", "debugger"] : [],
+    },
+
     build: {
-      // Output directory
       outDir: "dist",
-
-      // Generate sourcemaps for debugging production issues
       sourcemap: false,
-
-      // Warn if a chunk exceeds 500 KB
-      chunkSizeWarningLimit: 500,
+      chunkSizeWarningLimit: 200, // Target under 200KB chunks for optimal performance
 
       rollupOptions: {
         output: {
-          // Split vendor libraries into separate chunks for better caching
+          // Aggressive manual chunk splitting for optimal browser caching
           manualChunks: {
-            vendor: ["react", "react-dom", "react-router-dom"],
-            ui: [
-              "lucide-react",
-              "class-variance-authority",
-              "clsx",
-              "tailwind-merge",
-            ],
-            data: [
-              "@tanstack/react-query",
-              "axios",
-              "zustand",
-              "zod",
-              "react-hook-form",
-            ],
+            // Core React dependencies
+            react: ["react", "react-dom"],
+            "react-routing": ["react-router-dom"],
+            
+            // UI and styling
+            ui: ["lucide-react", "class-variance-authority", "clsx", "tailwind-merge"],
+            "radix-ui": ["radix-ui"],
+            
+            // Data fetching and state management
+            "data-fetch": ["@tanstack/react-query", "axios"],
+            state: ["zustand"],
+            
+            // Forms and validation
+            forms: ["react-hook-form", "@hookform/resolvers", "zod"],
+            
+            // Heavy libraries (separate to avoid main chunk bloat)
+            animations: ["framer-motion"],
+            charts: ["recharts"],
+            icons: ["react-icons"],
+            
+            // Utilities
+            dates: ["date-fns"],
+            supabase: ["@supabase/supabase-js"],
+            payments: ["react-paystack"],
+            
+            // Dev tools (only in dev, but nice to separate)
+            "query-devtools": ["@tanstack/react-query-devtools"],
           },
-        },
-      },
-
-      // Minification
-      minify: "terser",
-      terserOptions: {
-        compress: {
-          // Remove console.log in production (keeps console.warn and console.error)
-          pure_funcs: ["console.log"],
         },
       },
     },
 
-    // Preview server (for testing production builds locally via `npm run preview`)
     preview: {
       port: 5173,
     },
