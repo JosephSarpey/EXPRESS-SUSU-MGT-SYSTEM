@@ -1,92 +1,221 @@
-import { useEffect, useState, useRef } from "react";
-import "./landingPage.css";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Mail, Phone, MapPin, Send } from "lucide-react";
 
 const Contact = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      { threshold: 0.2 }
-    );
-
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const contactData = [
     {
-      label: "Email",
+      label: "Email Support",
       value: "akambeyisaac199@gmail.com",
       href: "mailto:akambeyisaac199@gmail.com",
-      icon: "M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z",
+      icon: Mail,
+      color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5",
     },
     {
-      label: "Phone",
-      value: "+ (233) 54 598 4455",
+      label: "Call or WhatsApp",
+      value: "+233 54 598 4455",
       href: "tel:+233545984455",
-      icon: "M6.62 10.79C8.06 13.62 10.38 15.94 13.21 17.38L15.41 15.18C15.69 14.9 16.08 14.82 16.43 14.93C17.55 15.3 18.75 15.5 20 15.5C20.55 15.5 21 15.95 21 16.5V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z",
+      icon: Phone,
+      color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5",
     },
     {
-      label: "Location",
-      value: "Spintex Greater Accra",
+      label: "Head Office",
+      value: "Spintex Rd, Greater Accra",
       href: "#",
-      icon: "M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z",
+      icon: MapPin,
+      color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5",
     },
   ];
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setSubmitSuccess(true);
+      setFormData({ name: "", email: "", subject: "", message: "" });
+      setTimeout(() => setSubmitSuccess(false), 5000);
+    }, 1500);
+  };
+
   return (
-    <section 
-      ref={sectionRef} 
-      className="contact-section bg-[#0a0a0a] py-24 text-white" 
+    <section
+      className="relative py-24 overflow-hidden"
       id="contact"
+      style={{ backgroundColor: "#05080a" }}
     >
-      <div className="mx-auto max-w-6xl px-6">
-        
-        {/* Header Animation: Smooth Fade Up & Expand */}
-        <div className={`text-center transition-all duration-[1000ms] ease-out ${
-          isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-        }`}>
-          <h2 className="text-4xl font-bold sm:text-5xl">
-            Get In <span className="text-green-400">Touch</span>
+      {/* Decorative Blob */}
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-6">
+        {/* SECTION HEADER */}
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <motion.span
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-[11px] font-mono tracking-[0.25em] text-emerald-400 uppercase block mb-3 font-semibold"
+          >
+            // 04 . Connect with support
+          </motion.span>
+          <h2
+            className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            We'd Love to{" "}
+            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+              Hear from You
+            </span>
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-gray-400">
-            We’re here to help you with reliable financial solutions and
-            customer support whenever you need us.
+          <p className="mt-4 text-base text-slate-400">
+            Have questions about our Susu schemes, interest rates, or loan
+            terms? Drop us a line below.
           </p>
         </div>
 
-        {/* Contact Cards with Staggered Pop-In Animation */}
-        <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {contactData.map((item, index) => (
-            <a
-              key={index}
-              href={item.href}
-              className={`group flex flex-col items-center rounded-3xl border border-white/5 bg-white/5 p-10 text-center transition-all duration-[800ms] hover:border-green-400/50 hover:bg-green-400/5 ${
-                isVisible 
-                  ? "scale-100 opacity-100" 
-                  : "scale-75 opacity-0"
-              }`}
-              style={{ transitionDelay: `${(index + 1) * 200}ms` }}
+        <div className="grid gap-12 lg:grid-cols-12">
+          {/* LEFT: Contact Cards info */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="lg:col-span-5 space-y-6"
+          >
+            {contactData.map((item, idx) => (
+              <a
+                key={idx}
+                href={item.href}
+                className="glass-card flex items-start gap-5 rounded-2xl border border-white/5 bg-[#0a0f12]/50 p-6 transition-all hover:border-emerald-500/20 hover:bg-[#0a0f12]/80 group"
+              >
+                <div
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border ${item.color}`}
+                >
+                  <item.icon size={20} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    {item.label}
+                  </h4>
+                  <p className="mt-1 text-base font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                    {item.value}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </motion.div>
+
+          {/* RIGHT: Contact Request Form */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="lg:col-span-7"
+          >
+            <form
+              onSubmit={handleSubmit}
+              className="glass-card rounded-3xl border border-white/5 bg-[#0a0f12]/40 p-6 sm:p-10"
             >
-              {/* Icon Circle with Pulsing Border on Hover */}
-              <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/10 text-green-400 transition-all duration-300 group-hover:scale-110 group-hover:bg-green-500 group-hover:text-black">
-                <svg className="h-8 w-8 fill-current" viewBox="0 0 24 24">
-                  <path d={item.icon} />
-                </svg>
+              <div className="grid gap-6 sm:grid-cols-2 mb-6">
+                <div>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-slate-500 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all"
+                    placeholder="Kwame Mensah"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-slate-500 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all"
+                    placeholder="kwame@example.com"
+                  />
+                </div>
               </div>
 
-              <div className="text-sm font-medium text-gray-500 uppercase tracking-widest">
-                {item.label}
+              <div className="mb-6">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.subject}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subject: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-slate-500 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all"
+                  placeholder="Inquiry about Daily Susu Schemes"
+                />
               </div>
-              <div className="mt-2 text-lg font-semibold text-white transition-colors group-hover:text-green-400">
-                {item.value}
+
+              <div className="mb-8">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                  Message
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={formData.message}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-slate-500 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all resize-none"
+                  placeholder="How can we assist you with your financial goals?"
+                />
               </div>
-            </a>
-          ))}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full group flex items-center justify-center gap-2 rounded-xl bg-emerald-500 py-4 text-sm font-bold text-slate-950 shadow-[0_4px_16px_rgba(16,185,129,0.2)] transition-all hover:bg-emerald-400 hover:shadow-[0_4px_24px_rgba(16,185,129,0.35)] active:scale-98 disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <span>Sending message...</span>
+                ) : submitSuccess ? (
+                  <span className="text-slate-950">
+                    Message Sent Successfully!
+                  </span>
+                ) : (
+                  <>
+                    Send Message
+                    <Send
+                      size={16}
+                      className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-0.5"
+                    />
+                  </>
+                )}
+              </button>
+            </form>
+          </motion.div>
         </div>
       </div>
     </section>

@@ -5,8 +5,7 @@ import { LayoutWrapper } from './components/layout/layout-wrapper'
 
 // Pages
 import HomePage from './pages/landingPage/HomePage'
-import { LoginPage } from './pages/auth/login'
-import { RegisterPage } from './pages/auth/register'
+import { AuthPage } from './pages/auth/AuthPage'
 import { VerifyEmailPage } from './pages/auth/verify-email'
 import { ForgotPasswordPage } from './pages/auth/forgot-password'
 import { ResetPasswordPage } from './pages/auth/reset-password'
@@ -52,8 +51,8 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/register" element={<AuthPage />} />
         <Route path="/auth/verify-email" element={<VerifyEmailPage />} />
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
