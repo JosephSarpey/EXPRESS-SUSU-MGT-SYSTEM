@@ -216,16 +216,17 @@ const Header = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ delay: navLinks.length * 0.08 }}
-                className="flex flex-col gap-3 pt-6 border-t border-white/5"
+                className="w-full flex flex-col gap-3 pt-6 mt-4 border-t border-white/5"
               >
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  className="w-full"
                 >
                   <Link
                     to="/login"
                     onClick={() => setIsOpen(false)}
-                    className="w-full rounded-full border border-emerald-500/30 bg-white/5 py-3.5 text-center text-sm font-semibold text-slate-200 transition-all duration-300 hover:bg-emerald-500/10 hover:text-emerald-300"
+                    className="block w-full rounded-full border border-emerald-500/30 bg-white/5 px-6 py-3 text-center text-sm font-semibold text-slate-200 transition-all duration-300 hover:bg-emerald-500/10 hover:text-emerald-300"
                   >
                     Sign In
                   </Link>
@@ -233,11 +234,12 @@ const Header = () => {
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  className="w-full"
                 >
                   <Link
                     to="/register"
                     onClick={() => setIsOpen(false)}
-                    className="w-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 py-3.5 text-center text-sm font-bold text-slate-950 shadow-[0_4px_24px_rgba(16,185,129,0.3)] transition-all duration-300 hover:from-emerald-400 hover:to-teal-400"
+                    className="block w-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-center text-sm font-bold text-slate-950 shadow-[0_4px_24px_rgba(16,185,129,0.3)] transition-all duration-300 hover:from-emerald-400 hover:to-teal-400"
                   >
                     Get Started
                   </Link>

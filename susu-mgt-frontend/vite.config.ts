@@ -32,7 +32,7 @@ export default defineConfig(({ mode }): UserConfig => {
 
     build: {
       outDir: "dist",
-      sourcemap: false,
+      sourcemap: "hidden",
       chunkSizeWarningLimit: 200, // Target under 200KB chunks for optimal performance
 
       rollupOptions: {
