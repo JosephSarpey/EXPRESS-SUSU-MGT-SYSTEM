@@ -1,5 +1,5 @@
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { authService } from '@/services/api/auth.service'
 import { Lock, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react'
@@ -12,9 +12,26 @@ export function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
+  // Extract token once on mount and clear it from the URL to prevent reuse
+  const tokenRef = useRef<string>('')
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash && hash.includes('access_token=')) {
+      const params = new URLSearchParams(hash.substring(1))
+      tokenRef.current = params.get('access_token') || ''
+      // Clear the token from the URL so it can't be reused via page reload
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (!tokenRef.current) {
+      setError('Reset link has expired or already been used. Please request a new one.')
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -23,16 +40,10 @@ export function ResetPasswordPage() {
 
     setIsLoading(true)
 
-    // Extract token from URL hash if present (Supabase recovery links use hash)
-    const hash = window.location.hash
-    let token = ''
-    if (hash && hash.includes('access_token=')) {
-      const params = new URLSearchParams(hash.substring(1))
-      token = params.get('access_token') || ''
-    }
-
     try {
-      await authService.updatePassword(password, token)
+      await authService.updatePassword(password, tokenRef.current)
+      // Invalidate the token locally so it can't be reused
+      tokenRef.current = ''
       setSuccess(true)
       setTimeout(() => {
         navigate('/login')

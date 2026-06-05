@@ -43,7 +43,8 @@ export class SupabaseService {
       redirectTo?: string;
     },
   ) {
-    const frontendUrl = this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
+    const frontendUrl =
+      this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
     const { data, error } = await this.supabase.auth.signUp({
       email,
       password,
@@ -52,7 +53,8 @@ export class SupabaseService {
           full_name: options?.fullName,
           phone: options?.phone,
         },
-        emailRedirectTo: options?.redirectTo ?? `${frontendUrl}/auth/verify-email`,
+        emailRedirectTo:
+          options?.redirectTo ?? `${frontendUrl}/auth/verify-email`,
       },
     });
 
@@ -151,7 +153,8 @@ export class SupabaseService {
   }
 
   async resetPassword(email: string, redirectTo?: string) {
-    const frontendUrl = this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
+    const frontendUrl =
+      this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
     const { data, error } = await this.supabase.auth.resetPasswordForEmail(
       email,
       {
@@ -177,11 +180,15 @@ export class SupabaseService {
       throw new Error(error.message);
     }
 
+    // Invalidate all sessions for this user so the recovery token can't be reused
+    await this.supabase.auth.admin.signOut(userId, 'global');
+
     return data;
   }
 
   async resendConfirmationEmail(email: string, redirectTo?: string) {
-    const frontendUrl = this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
+    const frontendUrl =
+      this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
     const { data, error } = await this.supabase.auth.resend({
       type: 'signup',
       email,
