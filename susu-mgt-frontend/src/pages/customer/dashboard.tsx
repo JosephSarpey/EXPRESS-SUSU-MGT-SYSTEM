@@ -267,7 +267,7 @@ export function CustomerDashboard() {
                     })
                   ) : (
                     <div className="text-center py-8 text-zinc-500 text-xs sm:text-sm font-medium">
-                      No account transaction logs found.
+                      No account transaction logs found
                     </div>
                   )}
                 </div>
