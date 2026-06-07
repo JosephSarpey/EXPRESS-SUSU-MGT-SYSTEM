@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { MobileNavbar } from "./mobileNavbar";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -180,7 +181,7 @@ export function WithdrawPage() {
 
       {/* Main Base Flex Layout Container */}
       <main className="w-full max-w-4xl mx-auto px-4 md:px-8 mt-8 flex-1">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start mb-8">
           {/* Main Request Form Component Box */}
           <div className="md:col-span-3">
             <Card className="border border-white/5 bg-[#0f1630] shadow-2xl rounded-2xl overflow-hidden transition-all duration-300 hover:border-emerald-500/20 hover:shadow-[0_0_25px_rgba(16,185,129,0.08)]">
@@ -353,6 +354,7 @@ export function WithdrawPage() {
             </div>
           </div>
         </div>
+        <MobileNavbar />
       </main>
     </div>
   );

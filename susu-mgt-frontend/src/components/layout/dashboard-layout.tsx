@@ -289,7 +289,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <div className=" p-6 flex items-center gap-1  border-b border-white/5">
           <div className=" bg-blue-600 p-0 rounded-xl shadow-md transform -rotate-6">
             <img
-              src="../src/assets/logo2.jpg"
+              src="../src/assets/logo2.png"
               alt="logo"
               className="h-6 w-6 object-contain"
             />
@@ -431,7 +431,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                             className={cn(
                               "w-full text-left px-4 py-3.5 hover:bg-[#131c3d]/40 transition-all duration-200 flex flex-col gap-1 relative",
                               isUnread &&
-                                "bg-blue-500/5 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-blue-500",
+                              "bg-blue-500/5 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-blue-500",
                             )}
                           >
                             <div className="flex items-start justify-between gap-3 w-full">
@@ -526,9 +526,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               className="md:hidden absolute top-16 left-0 right-0 w-full bg-[#0f1630] text-white border-b border-white/5 shadow-2xl z-50 flex flex-col animate-in fade-in slide-in-from-top-4 duration-200 max-h-[calc(100vh-4rem)] overflow-y-auto"
             >
               <div className="p-4 flex items-center gap-3 border-b border-white/5 bg-[#0b1026]/60">
-                <div className="bg-blue-600 p-2 rounded-xl shadow-md transform -rotate-6">
+                <div className=" p-2 rounded-xl shadow-md transform -rotate-6">
                   <img
-                    src="../src/assets/logo2.jpg"
+                    src="../src/assets/logo2.png"
                     alt="logo"
                     className="h-5 w-5 object-contain"
                   />

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { MobileNavbar } from "./mobileNavbar";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -186,7 +187,7 @@ export function TransactionsPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 mb-5">
           
           {/* Desktop Table Layout View */}
           <div className="hidden md:block overflow-x-auto">
@@ -449,6 +450,7 @@ export function TransactionsPage() {
             </div>
           )}
         </CardContent>
+        < MobileNavbar />
       </Card>
 
       <TransactionDetailsModal

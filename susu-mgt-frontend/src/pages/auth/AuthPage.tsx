@@ -15,7 +15,7 @@ import {
   ArrowRight,
   ArrowLeft,
 } from "lucide-react";
-import logo from "../../assets/logo2.jpg";
+import logo from "../../assets/logo2.png";
 import "./auth-page.css";
 
 export function AuthPage() {
@@ -87,8 +87,8 @@ export function AuthPage() {
     } catch (err: any) {
       setLoginError(
         err.response?.data?.message ||
-          err.message ||
-          "Invalid email or password",
+        err.message ||
+        "Invalid email or password",
       );
       setLoading(false);
     }
@@ -273,7 +273,7 @@ export function AuthPage() {
                   alt="Express Capital Logo"
                 />
                 <p className="brand-subtitle">
-                  EXPRESS <span>CAPITAL</span>
+                  UNIQUE <span>CAPITAL</span>
                 </p>
               </div>
 

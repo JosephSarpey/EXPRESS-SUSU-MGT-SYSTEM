@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "../../assets/logo2.jpg";
+import logo from "../../assets/logo2.png";
 import { Menu, X, ArrowRight } from "lucide-react";
 
 const Header = () => {
@@ -31,11 +31,10 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
           ? "border-b border-emerald-500/20 bg-[#05080a]/85 backdrop-blur-xl py-3 shadow-[0_10px_40px_rgba(16,185,129,0.1)]"
           : "bg-transparent py-5"
-      }`}
+        }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6">
         {/* Brand Logo & Wordmark */}

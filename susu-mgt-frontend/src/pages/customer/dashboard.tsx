@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import logo from "../../assets/logo2.jpg";
+import logo from "../../assets/logo2.png";
 import {
-  Wallet,
+  Home ,
   ArrowUpRight,
   ArrowDownLeft,
   History,
@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMyWallet, useWalletStats } from "@/hooks/use-customer";
 import { useMyTransactions } from "@/hooks/use-transactions";
-
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store";
@@ -86,7 +85,7 @@ export function CustomerDashboard() {
   }
 
   return (
-    <div className="bg-[#070c1e] min-h-screen text-white font-sans w-full flex flex-col justify-between pb-24 md:pb-6 relative selection:bg-emerald-500/30">
+    <div  className="bg-[#070c1e] min-h-screen text-white font-sans w-full flex flex-col justify-between pb-24 md:pb-6 relative selection:bg-emerald-500/30">
       {/* Universal Top Header Row */}
       <header className="w-full max-w-6xl mx-auto px-4 md:px-8 pt-4 pb-4 flex items-center justify-between md:justify-center border-b border-white/5 relative">
         {/* Styled App Brand Identity Element */}
@@ -399,15 +398,13 @@ export function CustomerDashboard() {
 
       {/* Mobile Sticky Tab Navigation Bar */}
       <div className="md:hidden fixed bottom-0 inset-x-0 bg-[#0f1630] border-t border-white/5 grid grid-cols-5 items-center justify-center py-2 px-1 text-center shadow-2xl rounded-t-2xl z-50">
-        <Link
-          to="/"
-          className="flex flex-col items-center justify-center text-emerald-400 font-bold"
-        >
-          <Wallet className="h-5 w-5 mb-0.5 shrink-0" />
-          <span className="text-[10px] tracking-tight truncate w-full">
+       
+      <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth",}) } className="flex flex-col items-center justify-center text-emerald-400 font-bold">
+          <div className="text-[10px] tracking-tight truncate w-full flex flex-col items-center">
+            <Home className="h-5 w-5 mb-0.5 shrink-0" />
             Home
-          </span>
-        </Link>
+          </div>
+       </button>
         <Link
           to="/customer/transactions"
           className="flex flex-col items-center justify-center text-zinc-500 hover:text-white transition-colors duration-200"
@@ -419,7 +416,7 @@ export function CustomerDashboard() {
         </Link>
 
         <div className="flex flex-col items-center justify-center">
-          <div className="rounded-full shadow-lg border-white hover:scale-105 transition-transform duration-250 cursor-pointer bg-blue-600 flex items-center justify-center p-0.5 shrink-0">
+          <div className="rounded-full shadow-lg border-white hover:scale-105 transition-transform duration-250 cursor-pointer flex items-center justify-center p-0.5 shrink-0">
             <img className="h-12 w-12 sm:h-14 sm:w-14" src={logo} alt="Logo" />
           </div>
         </div>

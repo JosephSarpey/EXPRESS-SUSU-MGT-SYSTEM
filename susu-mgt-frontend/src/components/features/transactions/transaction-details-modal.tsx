@@ -1,5 +1,22 @@
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { X, Receipt, Clock, CreditCard, Hash, Activity, FileText, User, Users, MapPin, Loader2 } from 'lucide-react'
 import { Transaction } from '@/services/api/transactions.service'
 import { Badge } from '@/components/ui/badge'
@@ -181,41 +198,44 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
             </div>
           )}
 
-          {/* Details Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div className="p-3.5 rounded-2xl bg-[#141d3d] border border-white/5 space-y-1 min-w-0">
-              <div className="flex items-center gap-1.5 text-zinc-500 mb-1">
-                <Clock className="h-3.5 w-3.5 text-blue-400" />
+          {/* Details Grid (Added specific py-2 sm:py-0 padding) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 py-2 sm:py-0">
+            <div className="p-4 rounded-2xl bg-[#141d3d] border border-white/5 flex flex-col justify-center min-w-0 shadow-sm">
+              <div className="flex items-center gap-1.5 text-zinc-500 mb-1.5">
+                <Clock className="h-3.5 w-3.5 text-blue-400 shrink-0" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">Date & Time</span>
               </div>
-              <p className="font-bold text-xs sm:text-sm text-zinc-200">
-                {format(new Date(transaction.createdAt), 'MMM dd, yyyy · hh:mm a')}
+              <p className="font-bold text-xs sm:text-sm text-zinc-200 leading-tight">
+                {format(new Date(transaction.createdAt), 'MMM dd, yyyy')}
+                <span className="block sm:inline text-zinc-400 font-medium sm:ml-1 mt-0.5 sm:mt-0">
+                   · {format(new Date(transaction.createdAt), 'hh:mm a')}
+                </span>
               </p>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#141d3d] border border-white/5 space-y-1 min-w-0">
-              <div className="flex items-center gap-1.5 text-zinc-500 mb-1">
-                <CreditCard className="h-3.5 w-3.5 text-blue-400" />
+            <div className="p-4 rounded-2xl bg-[#141d3d] border border-white/5 flex flex-col justify-center min-w-0 shadow-sm">
+              <div className="flex items-center gap-1.5 text-zinc-500 mb-1.5">
+                <CreditCard className="h-3.5 w-3.5 text-blue-400 shrink-0" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">Method</span>
               </div>
-              <p className="font-bold text-xs sm:text-sm text-zinc-200 capitalize">
+              <p className="font-bold text-xs sm:text-sm text-zinc-200 capitalize truncate">
                 {transaction.paymentMethod.replace(/_/g, ' ').toLowerCase()}
               </p>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#141d3d] border border-white/5 space-y-1 min-w-0">
-              <div className="flex items-center gap-1.5 text-zinc-500 mb-1">
-                <Hash className="h-3.5 w-3.5 text-blue-400" />
+            <div className="p-4 rounded-2xl bg-[#141d3d] border border-white/5 flex flex-col justify-center min-w-0 shadow-sm">
+              <div className="flex items-center gap-1.5 text-zinc-500 mb-1.5">
+                <Hash className="h-3.5 w-3.5 text-blue-400 shrink-0" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">Reference ID</span>
               </div>
-              <p className="font-mono text-xs text-zinc-200 break-all select-all">
+              <p className="font-mono text-[10px] sm:text-xs text-zinc-200 break-all select-all leading-normal">
                 {transaction.referenceId || 'N/A'}
               </p>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#141d3d] border border-white/5 space-y-1 min-w-0">
-              <div className="flex items-center gap-1.5 text-zinc-500 mb-1">
-                <Activity className="h-3.5 w-3.5 text-blue-400" />
+            <div className="p-4 rounded-2xl bg-[#141d3d] border border-white/5 flex flex-col justify-center min-w-0 shadow-sm">
+              <div className="flex items-center gap-1.5 text-zinc-500 mb-1.5">
+                <Activity className="h-3.5 w-3.5 text-blue-400 shrink-0" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">Gateway</span>
               </div>
               <p className="font-bold text-xs sm:text-sm text-zinc-200 truncate">
@@ -289,5 +309,3 @@ export function TransactionDetailsModal({ transaction, onClose }: TransactionDet
     </div>
   )
 }
-
-

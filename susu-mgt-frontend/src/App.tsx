@@ -25,6 +25,7 @@ const PageLoader = () => (
 
 // Public Pages - Lazy loaded with proper exports handling
 const HomePage = lazy(() => import('./pages/landingPage/HomePage'))
+
 const AuthPage = lazy(() => import('./pages/auth/AuthPage').then(m => ({ default: m.AuthPage })))
 const VerifyEmailPage = lazy(() => import('./pages/auth/verify-email').then(m => ({ default: m.VerifyEmailPage })))
 const ForgotPasswordPage = lazy(() => import('./pages/auth/forgot-password').then(m => ({ default: m.ForgotPasswordPage })))
@@ -61,7 +62,7 @@ const ReportsPage = lazy(() => import('./pages/admin/reports').then(m => ({ defa
 const SettingsPage = lazy(() => import('./pages/admin/settings').then(m => ({ default: m.SettingsPage })))
 const WithdrawalRequestsPage = lazy(() => import('./pages/admin/withdrawal-requests').then(m => ({ default: m.WithdrawalRequestsPage })))
 const AuditLogsPage = lazy(() => import('./pages/admin/audit-logs').then(m => ({ default: m.AuditLogsPage })))
-
+import { MobileNavbar } from './pages/customer/mobileNavbar'
 // Notifications - Lazy loaded
 const NotificationsPage = lazy(() => import('./components/features/notifications/notifications-page').then(m => ({ default: m.NotificationsPage })))
 
@@ -71,6 +72,7 @@ function App() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}
+          <Route path='mobilenav' element={<MobileNavbar />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/register" element={<AuthPage />} />

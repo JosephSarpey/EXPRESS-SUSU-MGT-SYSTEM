@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePaystackPayment } from 'react-paystack'
+import { MobileNavbar } from './mobileNavbar'
 import { 
   CreditCard, 
   ArrowLeft, 
@@ -140,7 +141,7 @@ export function DepositPage() {
 
       {/* Main Grid Wrapper */}
       <main className="w-full max-w-4xl mx-auto px-4 md:px-8 mt-6 sm:mt-8 flex-1">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start mb-7">
           
           {/* Main Transaction Form Container */}
           <div className="md:col-span-3">
@@ -266,11 +267,12 @@ export function DepositPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span>Gateway Engine Connectivity Active</span>
+              <span></span>
             </div>
           </div>
 
         </div>
+        < MobileNavbar />
       </main>
 
     </div>

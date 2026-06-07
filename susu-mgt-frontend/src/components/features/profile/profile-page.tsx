@@ -1,14 +1,4 @@
-
-
-
-
-
-
-
-
-
-
-
+import { MobileNavbar } from "@/pages/customer/mobileNavbar";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -94,8 +84,9 @@ export function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-10 font-sans text-white space-y-6 sm:space-y-8 pb-12 animate-in fade-in duration-500">
-      
+   
+    <div>
+         <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-10 font-sans text-white space-y-6 sm:space-y-8 pb-12 animate-in fade-in duration-500 mb-7">
       {/* Top Header Text Column */}
       <div className="min-w-0 border-b border-white/5 pb-5">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-emerald-400 bg-clip-text text-transparent truncate leading-normal">
@@ -270,6 +261,12 @@ export function ProfilePage() {
           <p className="font-bold text-xs sm:text-sm leading-tight">{error}</p>
         </div>
       )}
+
+    
     </div>
+       <MobileNavbar />
+    </div>
+ 
   );
+   
 }

@@ -1,8 +1,9 @@
 import { AddressesList } from '@/components/addresses/AddressesList'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, MapPin } from 'lucide-react'
-
+import { ArrowLeft, } from 'lucide-react'
+import {  MapPin} from "lucide-react"
+import { MobileNavbar } from './mobileNavbar'
 export function AddressesPage() {
   const navigate = useNavigate()
 
@@ -66,7 +67,7 @@ export function AddressesPage() {
           </div>
 
         </div>
-
+        <MobileNavbar />
       </main>
     </div>
   )
