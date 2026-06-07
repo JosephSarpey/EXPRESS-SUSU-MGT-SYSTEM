@@ -57,7 +57,7 @@ export function AddressesPage() {
               </p>
             </div>
             <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border bg-emerald-500/10 text-emerald-400 border-emerald-500/10 shadow-2xs w-fit shrink-0 whitespace-nowrap">
-              Secure Cloud Wallet Links 🔒
+              Secure Cloud Wallet Links 
             </div>
           </div>
 
