@@ -21,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { AdminService } from './admin.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { BackupService } from '../backup/backup.service.js';
 import { SupabaseJwtGuard } from '../auth/supabase-jwt.guard.js';
 import { RolesGuard } from '../../common/auth/roles.guard.js';
 import { Roles } from '../../common/auth/roles.decorator.js';
@@ -37,6 +38,7 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly notificationsService: NotificationsService,
+    private readonly backupService: BackupService,
   ) {}
 
   @Get('dashboard')
@@ -496,5 +498,24 @@ export class AdminController {
       search,
       status,
     });
+  }
+
+  // ─── Phase 6: System Operations ────────────────────────────────────
+
+  @Post('database-backup')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Trigger a manual database backup' })
+  @ApiResponse({
+    status: 200,
+    description: 'Backup created successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required',
+  })
+  async triggerBackup() {
+    await this.backupService.createBackup();
+    await this.backupService.cleanOldBackups();
+    return { success: true, message: 'Database backup completed successfully' };
   }
 }

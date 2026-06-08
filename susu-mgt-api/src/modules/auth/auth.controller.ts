@@ -8,8 +8,9 @@ import {
   HttpStatus,
   Request,
   Res,
+  UnauthorizedException,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Response, CookieOptions } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -29,6 +30,17 @@ import {
   VerifyEmailDto,
   ResendVerificationDto,
 } from './dto/verify-email.dto.js';
+
+/** Shared cookie options factory to keep settings DRY. */
+function cookieOptions(maxAgeMs: number, isProd: boolean): CookieOptions {
+  return {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'strict',
+    maxAge: maxAgeMs,
+    path: '/',
+  };
+}
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -69,22 +81,72 @@ export class AuthController {
     @Body() signInDto: SignInDto,
     @Res({ passthrough: true }) response: Response,
   ) {
+    const isProd = process.env.NODE_ENV === 'production';
     const data = await this.supabaseService.signIn(
       signInDto.email,
       signInDto.password,
     );
 
     if (data.session?.access_token) {
-      response.cookie('sb-access-token', data.session.access_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        maxAge: data.session.expires_in * 1000,
-        path: '/',
-      });
+      // Short-lived access token (typically 1 hour)
+      response.cookie(
+        'sb-access-token',
+        data.session.access_token,
+        cookieOptions(data.session.expires_in * 1000, isProd),
+      );
     }
 
-    return data;
+    if (data.session?.refresh_token) {
+      // Long-lived refresh token (7 days)
+      response.cookie(
+        'sb-refresh-token',
+        data.session.refresh_token,
+        cookieOptions(7 * 24 * 60 * 60 * 1000, isProd),
+      );
+    }
+
+    // Do not expose raw tokens to the client — they live in httpOnly cookies
+    return { user: data.user };
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh access token using refresh token cookie' })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
+  @ApiResponse({ status: 401, description: 'No or invalid refresh token' })
+  async refresh(
+    @Request() req: any,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const isProd = process.env.NODE_ENV === 'production';
+    const refreshToken = req.cookies?.['sb-refresh-token'] as
+      | string
+      | undefined;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('No refresh token cookie present');
+    }
+
+    const data = await this.supabaseService.refreshSession(refreshToken);
+
+    if (data.session?.access_token) {
+      response.cookie(
+        'sb-access-token',
+        data.session.access_token,
+        cookieOptions(data.session.expires_in * 1000, isProd),
+      );
+    }
+
+    // Rotate the refresh token if Supabase issued a new one
+    if (data.session?.refresh_token) {
+      response.cookie(
+        'sb-refresh-token',
+        data.session.refresh_token,
+        cookieOptions(7 * 24 * 60 * 60 * 1000, isProd),
+      );
+    }
+
+    return { message: 'Token refreshed successfully' };
   }
 
   @Post('signout')
@@ -95,25 +157,26 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
   async signOut(
-    @Request() req: { headers: { authorization: string } },
+    @Request() req: any,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const cookies = (req as any).cookies as
-      | Record<string, string | undefined>
-      | undefined;
-    const token =
-      req.headers.authorization?.split(' ')[1] || cookies?.['sb-access-token'];
+    const isProd = process.env.NODE_ENV === 'production';
+    const token: string | undefined =
+      req.headers?.authorization?.split(' ')[1] ||
+      req.cookies?.['sb-access-token'];
 
     if (token) {
       await this.supabaseService.signOut(token);
     }
 
-    response.clearCookie('sb-access-token', {
+    const clearOpts: CookieOptions = {
       path: '/',
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-    });
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'strict',
+    };
+    response.clearCookie('sb-access-token', clearOpts);
+    response.clearCookie('sb-refresh-token', clearOpts);
 
     return { message: 'Signed out successfully' };
   }

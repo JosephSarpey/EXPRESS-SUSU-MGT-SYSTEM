@@ -287,6 +287,13 @@ export class TransactionsService {
         },
       });
 
+      // Fetch the customer's details to include in notifications
+      const customer = await tx.user.findUnique({
+        where: { id: params.userId },
+        select: { fullName: true },
+      });
+      const customerName = customer?.fullName ?? 'Unknown User';
+
       // Notify all admins (in-app SYSTEM notification + EMAIL notification)
       try {
         const admins = await tx.user.findMany({
@@ -295,7 +302,7 @@ export class TransactionsService {
         });
 
         const adminSubject = 'New withdrawal request submitted';
-        const adminMessage = `User ${params.userId} requested a withdrawal of ${wallet.currency} ${params.amount.toString()} via ${params.method}. Reference: ${referenceId}`;
+        const adminMessage = `Customer ${customerName} requested a withdrawal of ${wallet.currency} ${params.amount.toString()} via ${params.method}. Reference: ${referenceId}`;
 
         const notificationsData: Array<any> = [];
         for (const admin of admins) {
@@ -332,7 +339,7 @@ export class TransactionsService {
           });
 
           const workerSubject = 'New cash withdrawal request';
-          const workerMessage = `A new cash withdrawal of ${wallet.currency} ${params.amount.toString()} has been requested. Reference: ${referenceId}`;
+          const workerMessage = `A new cash withdrawal of ${wallet.currency} ${params.amount.toString()} has been requested by ${customerName}. Reference: ${referenceId}`;
 
           const workerNotifications = workers.map((worker) => ({
             userId: worker.id,

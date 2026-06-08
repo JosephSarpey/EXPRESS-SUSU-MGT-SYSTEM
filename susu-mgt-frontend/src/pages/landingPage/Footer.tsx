@@ -43,11 +43,7 @@ const Footer = () => {
           {/* Column 1: Brand Info */}
           <div className="lg:col-span-4">
             <div className="flex items-center gap-2 mb-6">
-              <img
-                src={logo}
-                alt="Express Capital Logo"
-                className="w-10 h-10"
-              />
+              <img src={logo} alt="Unique Capital Logo" className="w-10 h-10" />
               <p className="text-lg font-bold tracking-tight text-white">
                 <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
                   UNIQUE
@@ -179,6 +175,15 @@ const Footer = () => {
               className="text-slate-400 hover:text-emerald-400 transition-colors font-medium"
             >
               Startech
+            </a>
+            <span> and</span>
+            <a
+              href="https://themegastechinc.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-400 hover:text-emerald-400 transition-colors font-medium"
+            >
+              MegasTech
             </a>
           </p>
         </div>

@@ -87,8 +87,8 @@ export function AuthPage() {
     } catch (err: any) {
       setLoginError(
         err.response?.data?.message ||
-        err.message ||
-        "Invalid email or password",
+          err.message ||
+          "Invalid email or password",
       );
       setLoading(false);
     }
@@ -141,7 +141,7 @@ export function AuthPage() {
         {/* LOGIN PANEL */}
         <div className="credentials-panel signin">
           <div className="brand-header slide-element">
-            <img className="brand-logo" src={logo} alt="Express Capital Logo" />
+            <img className="brand-logo" src={logo} alt="Unique Capital Logo" />
             <p className="brand-subtitle">
               UNIQUE <span>CAPITAL</span>
             </p>
@@ -270,7 +270,7 @@ export function AuthPage() {
                 <img
                   className="brand-logo"
                   src={logo}
-                  alt="Express Capital Logo"
+                  alt="Unique Capital Logo"
                 />
                 <p className="brand-subtitle">
                   UNIQUE <span>CAPITAL</span>

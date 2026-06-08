@@ -244,4 +244,16 @@ export class SupabaseService {
       throw new Error(error.message);
     }
   }
+
+  async refreshSession(refreshToken: string) {
+    const { data, error } = await this.supabase.auth.refreshSession({
+      refresh_token: refreshToken,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
 }

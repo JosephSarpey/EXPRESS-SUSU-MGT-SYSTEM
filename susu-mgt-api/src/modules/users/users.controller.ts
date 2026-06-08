@@ -179,10 +179,7 @@ export class UsersController {
     description: 'Forbidden - Admin access required',
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async updateUser(
-    @Param('id') id: string,
-    @Body() dto: UpdateUserDto,
-  ) {
+  async updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.updateUser(id, dto);
   }
 }

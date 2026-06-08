@@ -163,5 +163,10 @@ export const adminService = {
   getTransactions: async (params: { userId?: string; page?: number; limit?: number } = {}) => {
     const response = await apiClient.get('/admin/transactions', { params })
     return response.data
+  },
+
+  triggerDatabaseBackup: async () => {
+    const response = await apiClient.post('/admin/database-backup')
+    return response.data
   }
 }

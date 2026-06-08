@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,6 +7,7 @@ import {
   AlertCircle,
   Coins,
   Settings,
+  Database,
 } from "lucide-react";
 import {
   Card,
@@ -20,11 +20,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminService } from "@/services/api/admin.service";
 
-
 export function SettingsPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [isBackingUp, setIsBackingUp] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -130,6 +130,21 @@ export function SettingsPage() {
     }
   };
 
+  const handleTriggerBackup = async () => {
+    try {
+      setIsBackingUp(true);
+      await adminService.triggerDatabaseBackup();
+      showSuccessFeedback("Database backup completed successfully!");
+    } catch (err) {
+      console.error("Error triggering backup:", err);
+      showErrorFeedback(
+        "Failed to trigger database backup. Please check server logs.",
+      );
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#070c1e]">
@@ -190,7 +205,7 @@ export function SettingsPage() {
                   size="sm"
                   disabled={isUpdating === "platformName"}
                   onClick={handleUpdatePlatformName}
-                  className="bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl h-11 px-5 transition-all duration-300 shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:shadow-[0_0_25px_rgba(59,130,246,0.4)]"
+                  className="bg-emerald-600 hover:bg-emerald-400 text-white font-semibold rounded-xl h-11 px-5 transition-all duration-300 shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:shadow-[0_0_25px_rgba(59,130,246,0.4)]"
                 >
                   {isUpdating === "platformName" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -217,7 +232,9 @@ export function SettingsPage() {
           <CardContent className="space-y-6 p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-[#141d3d] border border-white/5 transition-all duration-300 hover:border-emerald-500/20">
               <div className="flex-1">
-                <p className="font-bold text-sm text-zinc-200">Minimum Withdrawal Amount</p>
+                <p className="font-bold text-sm text-zinc-200">
+                  Minimum Withdrawal Amount
+                </p>
                 <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
                   The minimum amount a customer is allowed to request when
                   withdrawing funds.
@@ -241,6 +258,45 @@ export function SettingsPage() {
                   ) : (
                     "Update"
                   )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* System Operations */}
+        <Card className="border border-white/5 bg-[#0f1630] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 hover:border-purple-500/20 hover:shadow-[0_0_25px_rgba(168,85,247,0.08)]">
+          <CardHeader className="bg-[#0b1026] border-b border-white/5 p-4 md:p-6">
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-white">
+              <Database className="h-4 w-4 text-emerald-400" />
+              System Operations
+            </CardTitle>
+            <CardDescription className="text-xs text-zinc-400 mt-1">
+              Manual tasks and background job triggers.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-[#141d3d] border border-white/5 transition-all duration-300 hover:border-purple-500/20">
+              <div className="flex-1">
+                <p className="font-bold text-sm text-zinc-200">
+                  Database Backup
+                </p>
+                <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+                  Trigger an immediate manual dump of the database. The backup
+                  will be saved locally and uploaded to Supabase Storage.
+                </p>
+              </div>
+              <div className="flex gap-2 w-full md:w-auto items-center">
+                <Button
+                  size="sm"
+                  disabled={isBackingUp}
+                  onClick={handleTriggerBackup}
+                  className="bg-emerald-600 hover:bg-emerald-400 text-white font-semibold rounded-xl h-11 px-5 transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_25px_rgba(168,85,247,0.4)]"
+                >
+                  {isBackingUp && (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  )}
+                  {isBackingUp ? "Backing up..." : "Trigger Backup"}
                 </Button>
               </div>
             </div>

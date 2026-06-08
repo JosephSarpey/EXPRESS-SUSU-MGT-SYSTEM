@@ -1,13 +1,8 @@
-import { apiClient, setAccessToken } from './client'
+import { apiClient } from './client'
 import { User } from '@/store/auth-store'
 
 export interface AuthResponse {
   user: any
-  session: {
-    access_token: string
-    refresh_token: string
-    user: any
-  } | null
 }
 
 export interface SignInDto {
@@ -25,11 +20,8 @@ export interface SignUpDto {
 
 export const authService = {
   signIn: async (data: SignInDto): Promise<AuthResponse> => {
+    // Tokens are set as httpOnly cookies by the server — not accessible to JS.
     const response = await apiClient.post<AuthResponse>('/auth/signin', data)
-    // Store access token for Bearer header on subsequent requests
-    if (response.data.session?.access_token) {
-      setAccessToken(response.data.session.access_token)
-    }
     return response.data
   },
 
@@ -40,7 +32,14 @@ export const authService = {
 
   signOut: async () => {
     await apiClient.post('/auth/signout')
-    setAccessToken(null)
+  },
+
+  /**
+   * Uses the httpOnly sb-refresh-token cookie to obtain a new sb-access-token
+   * cookie. Called automatically by AuthGuard when the access token has expired.
+   */
+  refresh: async () => {
+    await apiClient.post('/auth/refresh')
   },
 
   getMe: async (): Promise<User> => {

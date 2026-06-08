@@ -73,8 +73,8 @@ async function bootstrap() {
 
   // Swagger configuration
   const config = new DocumentBuilder()
-    .setTitle('Express Capital Savings MGT System API')
-    .setDescription('API documentation for Express Capital Savings MGT System')
+    .setTitle('Unique Capital Savings MGT System API')
+    .setDescription('API documentation for Unique Capital Savings MGT System')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

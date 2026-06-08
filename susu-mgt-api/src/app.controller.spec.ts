@@ -15,9 +15,9 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Welcome to Express Capital Savings MGT System API"', () => {
+    it('should return "Welcome to Unique Capital Savings MGT System API"', () => {
       expect(appController.getHello()).toBe(
-        'Welcome to Express Capital Savings MGT System API',
+        'Welcome to Unique Capital Savings MGT System API',
       );
     });
   });
