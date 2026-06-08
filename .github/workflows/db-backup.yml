@@ -42,7 +42,12 @@ jobs:
       - name: Run Database Backup
         run: npm run db:backup
         env:
+          DATABASE_URL: "dummy_database_url_for_validation"
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: "dummy_resend_key"
+          RESEND_FROM_EMAIL: "dummy@example.com"
+          PAYSTACK_SECRET_KEY: "dummy_paystack_key"
+          PAYSTACK_WEBHOOK_SECRET: "dummy_webhook_secret"
           BACKUP_RETENTION_DAYS: ${{ vars.BACKUP_RETENTION_DAYS || 7 }}
