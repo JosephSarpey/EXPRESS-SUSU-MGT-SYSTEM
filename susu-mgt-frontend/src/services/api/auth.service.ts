@@ -52,6 +52,20 @@ export const authService = {
     return response.data
   },
 
+  /**
+   * Called after Supabase redirects back with an access_token in the hash.
+   * Sends the token to the backend so it can validate it and mark
+   * emailVerified = true in the local database.
+   */
+  confirmEmailVerification: async (accessToken: string, type: string = 'signup') => {
+    const response = await apiClient.post('/auth/confirm-email-verification', {
+      accessToken,
+      type,
+    })
+    return response.data
+  },
+
+
   resendVerification: async (data: { email: string; redirectTo?: string }) => {
     const response = await apiClient.post('/auth/resend-verification', data)
     return response.data

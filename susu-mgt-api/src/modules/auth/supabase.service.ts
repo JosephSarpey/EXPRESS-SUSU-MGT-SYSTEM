@@ -1,4 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UsersService } from '../users/users.service.js';
@@ -59,7 +65,25 @@ export class SupabaseService {
     });
 
     if (error) {
-      throw new Error(error.message);
+      // Map known Supabase errors to appropriate HTTP exceptions
+      if (
+        error.message?.includes('already registered') ||
+        error.message?.includes('already been registered')
+      ) {
+        throw new ConflictException(error.message);
+      }
+      throw new BadRequestException(error.message);
+    }
+
+    // Supabase returns a fake success for duplicate emails (to prevent
+    // email enumeration).  The tell-tale sign is an empty identities array.
+    if (
+      data.user &&
+      (!data.user.identities || data.user.identities.length === 0)
+    ) {
+      throw new ConflictException(
+        'Email address already exists, please try again..',
+      );
     }
 
     // Create local user record if signup was successful
@@ -101,7 +125,10 @@ export class SupabaseService {
     });
 
     if (error) {
-      throw new Error(error.message);
+      if (error.message?.includes('already') || error.status === 422) {
+        throw new ConflictException(error.message);
+      }
+      throw new BadRequestException(error.message);
     }
 
     return data;
@@ -115,7 +142,7 @@ export class SupabaseService {
 
     if (error) {
       console.error(`Login failed for ${email}: ${error.message}`);
-      throw new Error(error.message);
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     return data;
@@ -125,7 +152,7 @@ export class SupabaseService {
     const { error } = await this.supabase.auth.admin.signOut(jwt);
 
     if (error) {
-      throw new Error(error.message);
+      throw new UnauthorizedException(error.message);
     }
   }
 
@@ -141,7 +168,7 @@ export class SupabaseService {
     });
 
     if (error) {
-      throw new Error(error.message);
+      throw new BadRequestException(error.message);
     }
 
     // Update local user's emailVerified status if verification successful
@@ -150,6 +177,37 @@ export class SupabaseService {
     }
 
     return data;
+  }
+
+  /**
+   * Called after Supabase's email verification redirect.
+   *
+   * Supabase has already verified the email on its side and returned an
+   * access_token in the URL hash.  We validate that token server-side,
+   * then sync our local DB (emailVerified = true, status = ACTIVE).
+   */
+  async confirmEmailVerification(accessToken: string) {
+    // Validate the access token with Supabase to get the user
+    const {
+      data: { user },
+      error,
+    } = await this.supabase.auth.getUser(accessToken);
+
+    if (error || !user) {
+      throw new UnauthorizedException(
+        error?.message || 'Invalid or expired access token',
+      );
+    }
+
+    // Only update if the email is actually confirmed in Supabase
+    if (!user.email_confirmed_at) {
+      throw new BadRequestException('Email has not been confirmed in Supabase');
+    }
+
+    // Sync our local database
+    await this.usersService.updateEmailVerificationStatus(user.id, true);
+
+    return { message: 'Email verification confirmed', userId: user.id };
   }
 
   async resetPassword(email: string, redirectTo?: string) {
@@ -163,7 +221,7 @@ export class SupabaseService {
     );
 
     if (error) {
-      throw new Error(error.message);
+      throw new BadRequestException(error.message);
     }
 
     return data;
@@ -177,7 +235,7 @@ export class SupabaseService {
 
     if (error) {
       console.error(`Password update failed for ${userId}: ${error.message}`);
-      throw new Error(error.message);
+      throw new BadRequestException(error.message);
     }
 
     // Invalidate all sessions for this user so the recovery token can't be reused
@@ -198,7 +256,7 @@ export class SupabaseService {
     });
 
     if (error) {
-      throw new Error(error.message);
+      throw new BadRequestException(error.message);
     }
 
     return data;
@@ -211,7 +269,7 @@ export class SupabaseService {
     } = await this.supabase.auth.getUser(jwt);
 
     if (error) {
-      throw new Error(error.message);
+      throw new UnauthorizedException(error.message);
     }
 
     return user;
@@ -231,7 +289,7 @@ export class SupabaseService {
     );
 
     if (error) {
-      throw new Error(error.message);
+      throw new BadRequestException(error.message);
     }
 
     return data;
@@ -241,7 +299,7 @@ export class SupabaseService {
     const { error } = await this.supabase.auth.admin.deleteUser(userId);
 
     if (error) {
-      throw new Error(error.message);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -251,7 +309,7 @@ export class SupabaseService {
     });
 
     if (error) {
-      throw new Error(error.message);
+      throw new UnauthorizedException(error.message);
     }
 
     return data;

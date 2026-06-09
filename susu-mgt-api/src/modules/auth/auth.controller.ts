@@ -30,6 +30,7 @@ import {
   VerifyEmailDto,
   ResendVerificationDto,
 } from './dto/verify-email.dto.js';
+import { ConfirmEmailVerificationDto } from './dto/confirm-email-verification.dto.js';
 
 /** Shared cookie options factory to keep settings DRY. */
 function cookieOptions(maxAgeMs: number, isProd: boolean): CookieOptions {
@@ -191,6 +192,18 @@ export class AuthController {
       verifyEmailDto.token,
       verifyEmailDto.type || 'signup',
     );
+  }
+
+  @Post('confirm-email-verification')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Confirm email verification after Supabase redirect (access_token flow)',
+  })
+  @ApiResponse({ status: 200, description: 'Email verification synced' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired access token' })
+  async confirmEmailVerification(@Body() dto: ConfirmEmailVerificationDto) {
+    return this.supabaseService.confirmEmailVerification(dto.accessToken);
   }
 
   @Post('resend-verification')

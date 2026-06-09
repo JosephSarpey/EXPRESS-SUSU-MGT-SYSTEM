@@ -1,8 +1,9 @@
-
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { authService } from '@/services/api/auth.service'
-import { KeyRound, Mail, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { KeyRound, Mail, Loader2, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react'
+import logo from '../../assets/logo2.png'
+import './auth-page.css'
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -30,115 +31,333 @@ export function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-zinc-950">
-        <div className="w-full max-w-md space-y-8 rounded-3xl bg-white p-8 shadow-xl dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-900/30">
-            <CheckCircle2 className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+      <div className="auth-page-wrapper">
+        {/* Back button */}
+        <Link to="/" className="back-to-website">
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Website</span>
+        </Link>
+
+        {/* Glow blobs */}
+        <div className="glow-blob one"></div>
+        <div className="glow-blob two"></div>
+
+        {/* Card */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 2,
+            width: '100%',
+            maxWidth: '460px',
+            background: 'rgba(24, 24, 27, 0.75)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid rgba(16, 185, 129, 0.25)',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7), 0 0 30px rgba(16,185,129,0.08)',
+            borderRadius: '24px',
+            padding: '48px 36px',
+            textAlign: 'center',
+          }}
+        >
+          {/* Brand header */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
+            <img src={logo} alt="Unique Capital Logo" style={{ height: '48px', objectFit: 'contain', marginBottom: '8px' }} />
+            <p style={{ fontSize: '10px', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '2px', margin: 0 }}>
+              UNIQUE <span style={{ color: '#10b981', fontWeight: 600 }}>CAPITAL</span>
+            </p>
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+
+          {/* Success icon with glow */}
+          <div style={{
+            margin: '0 auto 20px',
+            width: '72px',
+            height: '72px',
+            borderRadius: '50%',
+            background: 'rgba(16, 185, 129, 0.12)',
+            border: '2px solid rgba(16, 185, 129, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 0 30px rgba(16, 185, 129, 0.2)',
+          }}>
+            <CheckCircle2 className="h-8 w-8" style={{ color: '#10b981' }} />
+          </div>
+
+          <h2 style={{
+            fontSize: '26px',
+            fontWeight: 700,
+            color: '#ffffff',
+            marginBottom: '8px',
+            fontFamily: 'Poppins, sans-serif'
+          }}>
             Check your email
           </h2>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            We've sent a password reset link to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{email}</span>.
+
+          <p style={{
+            fontSize: '14px',
+            color: '#d4d4d8',
+            lineHeight: 1.6,
+            margin: '0 0 28px',
+            fontFamily: 'Poppins, sans-serif'
+          }}>
+            We've sent a password reset link to <span style={{ color: '#ffffff', fontWeight: 600 }}>{email}</span>.
           </p>
-          <div className="pt-6">
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400"
-            >
-              Back to Sign in
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+
+          <Link
+            to="/login"
+            className="submit-button"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              width: '100%',
+              height: '45px',
+              background: 'transparent',
+              borderRadius: '40px',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: 600,
+              color: '#ffffff',
+              border: '2px solid #10b981',
+              textDecoration: 'none',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              fontFamily: 'Poppins, sans-serif'
+            }}
+          >
+            <span>Back to Sign In</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-zinc-950">
-      <div className="w-full max-w-md space-y-8 rounded-3xl bg-white p-8 shadow-xl dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-        <div className="text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/30">
-            <KeyRound className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+    <div className="auth-page-wrapper">
+      {/* Back button */}
+      <Link to="/" className="back-to-website">
+        <ArrowLeft className="h-4 w-4" />
+        <span>Back to Website</span>
+      </Link>
+
+      {/* Glow blobs */}
+      <div className="glow-blob one"></div>
+      <div className="glow-blob two"></div>
+
+      {/* Card */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          width: '100%',
+          maxWidth: '460px',
+          background: 'rgba(24, 24, 27, 0.75)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(16, 185, 129, 0.25)',
+          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7), 0 0 30px rgba(16,185,129,0.08)',
+          borderRadius: '24px',
+          padding: '48px 36px',
+        }}
+      >
+        {/* Brand header */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
+          <img src={logo} alt="Unique Capital Logo" style={{ height: '48px', objectFit: 'contain', marginBottom: '8px' }} />
+          <p style={{ fontSize: '10px', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '2px', margin: 0 }}>
+            UNIQUE <span style={{ color: '#10b981', fontWeight: 600 }}>CAPITAL</span>
+          </p>
+        </div>
+
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <div style={{
+            margin: '0 auto 20px',
+            width: '64px',
+            height: '64px',
+            borderRadius: '18px',
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <KeyRound className="h-7 w-7" style={{ color: '#10b981' }} />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: 700,
+            color: '#ffffff',
+            marginBottom: '8px',
+            fontFamily: 'Poppins, sans-serif'
+          }}>
             Forgot Password?
           </h2>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+          <p style={{
+            fontSize: '14px',
+            color: '#a1a1aa',
+            lineHeight: 1.6,
+            margin: 0,
+            fontFamily: 'Poppins, sans-serif'
+          }}>
             No worries, we'll send you reset instructions.
           </p>
         </div>
 
+        {/* Error alert */}
         {error && (
-          <div className="flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400 border border-red-100 dark:border-red-900/30">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <p>{error}</p>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: 'rgba(220, 38, 38, 0.15)',
+            border: '1px solid rgba(220, 38, 38, 0.3)',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            fontSize: '12px',
+            color: '#fca5a5',
+          }}>
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Email address
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          {/* Email field */}
+          <div
+            className="field-wrapper"
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '48px',
+              marginBottom: '28px',
+            }}
+          >
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder=" "
+              style={{
+                width: '100%',
+                height: '100%',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: 'none',
+                borderBottom: `2px solid ${email ? '#10b981' : '#3f3f46'}`,
+                borderRadius: '8px 8px 0 0',
+                outline: 'none',
+                fontSize: '14px',
+                color: '#ffffff',
+                fontWeight: 500,
+                paddingLeft: '32px',
+                paddingRight: '36px',
+                transition: 'all 0.3s ease',
+                fontFamily: 'Poppins, sans-serif',
+              }}
+              onFocus={(e) => {
+                e.target.style.background = 'rgba(16, 185, 129, 0.04)'
+                e.target.style.borderBottomColor = '#10b981'
+              }}
+              onBlur={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.02)'
+                if (!email) e.target.style.borderBottomColor = '#3f3f46'
+              }}
+            />
+            <label
+              style={{
+                position: 'absolute',
+                top: email ? '-6px' : '50%',
+                left: email ? '0px' : '32px',
+                transform: email ? 'none' : 'translateY(-50%)',
+                fontSize: email ? '11px' : '14px',
+                fontWeight: email ? 600 : 400,
+                color: email ? '#10b981' : '#a1a1aa',
+                pointerEvents: 'none',
+                transition: 'all 0.3s ease',
+                fontFamily: 'Poppins, sans-serif',
+              }}
+            >
+              Email Address
             </label>
-            <div className="relative mt-2">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                <Mail className="h-5 w-5 text-zinc-400" />
-              </div>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-blue-500 dark:focus:bg-zinc-900"
-                placeholder="you@example.com"
-              />
-            </div>
+            <span
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '8px',
+                transform: 'translateY(-50%)',
+                color: email ? '#10b981' : '#a1a1aa',
+                display: 'flex',
+                alignItems: 'center',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              <Mail className="h-4 w-4" />
+            </span>
           </div>
 
+          {/* Submit button — uses auth-page.css .submit-button class */}
           <button
+            className="submit-button"
             type="submit"
             disabled={isLoading}
-            className="group flex w-full justify-center items-center gap-2 rounded-2xl bg-blue-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-500 hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-zinc-900 mt-6"
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '45px',
+              background: 'transparent',
+              borderRadius: '40px',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              fontSize: '15px',
+              fontWeight: 600,
+              color: '#ffffff',
+              border: '2px solid #10b981',
+              overflow: 'hidden',
+              zIndex: 1,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              fontFamily: 'Poppins, sans-serif'
+            }}
           >
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <>
-                Send Reset Link
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <span>Send Reset Link</span>
+                <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>
-
-          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-            Remembered your password?{' '}
-            <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400">
-              Sign in
-            </Link>
-          </p>
         </form>
+
+        {/* Back to sign in */}
+        <p style={{
+          textAlign: 'center',
+          fontSize: '13px',
+          color: '#a1a1aa',
+          marginTop: '24px',
+          fontFamily: 'Poppins, sans-serif'
+        }}>
+          Remembered your password?{' '}
+          <Link
+            to="/login"
+            style={{
+              color: '#10b981',
+              fontWeight: 600,
+              textDecoration: 'none',
+              transition: '0.3s',
+            }}
+          >
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   )
 }
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
