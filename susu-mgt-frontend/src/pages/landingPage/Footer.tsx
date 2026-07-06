@@ -168,7 +168,7 @@ const Footer = () => {
           <p>
             © {new Date().getFullYear()} UNIQUE CAPITAL. All rights reserved.
           </p>
-          <p className="flex items-center gap-1.5">
+          {/* <p className="flex items-center gap-1.5">
             Designed by
             <a
               href="#"
@@ -185,7 +185,7 @@ const Footer = () => {
             >
               MegasTech
             </a>
-          </p>
+          </p> */}
         </div>
       </div>
     </footer>
