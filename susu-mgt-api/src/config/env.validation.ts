@@ -53,10 +53,12 @@ class EnvironmentVariables {
   ALLOWED_ORIGINS: string;
 
   @IsString()
-  AXIOM_API_TOKEN: string;
+  @IsOptional()
+  AXIOM_API_TOKEN?: string;
 
   @IsString()
-  AXIOM_DATASET: string;
+  @IsOptional()
+  AXIOM_DATASET?: string;
 
   @IsString()
   @IsOptional()

@@ -191,7 +191,7 @@ export function AuditLogsPage() {
                       </td>
                       <td className="px-6 py-5.5">
                         <p className="font-semibold text-zinc-200 text-xs">
-                          {log.user?.fullName || log.userId || "System"}
+                          {log.user?.fullName || log.actorId || log.userId || "System"}
                         </p>
                       </td>
                       <td className="px-6 py-5.5 text-xs text-zinc-400">

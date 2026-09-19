@@ -34,8 +34,39 @@ export class AuditService {
   }
 
   async logEvent(event: AuditEvent): Promise<void> {
-    const logEntry = {
+    const redact = (obj: any): any => {
+      if (!obj || typeof obj !== 'object') return obj;
+      if (Array.isArray(obj)) return obj.map(redact);
+      const res: any = { ...obj };
+      for (const k of Object.keys(res)) {
+        const lowerK = k.toLowerCase();
+        if (
+          lowerK.includes('token') ||
+          lowerK.includes('secret') ||
+          lowerK.includes('password') ||
+          lowerK.includes('authorization')
+        ) {
+          res[k] = '[REDACTED]';
+        } else if (
+          typeof res[k] === 'string' &&
+          (res[k].startsWith('Bearer ') || res[k].startsWith('Basic '))
+        ) {
+          res[k] = '[REDACTED]';
+        } else if (typeof res[k] === 'object') {
+          res[k] = redact(res[k]);
+        }
+      }
+      return res;
+    };
+
+    const sanitizedEvent = {
       ...event,
+      newValues: redact(event.newValues),
+      oldValues: redact(event.oldValues),
+    };
+
+    const logEntry = {
+      ...sanitizedEvent,
       timestamp: new Date().toISOString(),
     };
 
@@ -76,7 +107,10 @@ export class AuditService {
       // Basic APL query for Axiom
       let query = `['${this.dataset}']`;
       if (params.search) {
-        query += ` | where action == "${params.search}" or actorId == "${params.search}"`;
+        const escapedSearch = params.search
+          .replace(/\\/g, '\\\\')
+          .replace(/"/g, '\\"');
+        query += ` | where action == "${escapedSearch}" or actorId == "${escapedSearch}"`;
       }
       query += ` | sort by _time desc | limit ${limit}`;
 
@@ -91,7 +125,7 @@ export class AuditService {
         format: 'legacy',
       });
 
-      const total = res.status?.rowsExamined || 0;
+      const total = res.status?.rowsMatched || res.status?.rowsExamined || 0;
       return {
         data: res.matches?.map((match) => match.data) || [],
         meta: {

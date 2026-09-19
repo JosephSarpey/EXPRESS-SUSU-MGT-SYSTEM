@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   BadRequestException,
   ForbiddenException,
@@ -21,7 +22,8 @@ export class WorkersService {
   ) {}
 
   async clockIn(workerId: string, deviceInfo?: string, ipAddress?: string) {
-    return this.prisma.$transaction(
+    let auditLogPayload: any = null;
+    const result = await this.prisma.$transaction(
       async (trx) => {
         const active = await trx.workerSession.findFirst({
           where: {
@@ -68,22 +70,31 @@ export class WorkersService {
           await trx.notification.createMany({ data: notificationsData });
         }
 
-        await this.auditService.logEvent({
+        auditLogPayload = {
           actorId: workerId,
           action: 'WORKER_CLOCK_IN',
           targetId: session.id,
           entityType: 'WorkerSession',
           newValues: { ipAddress, deviceInfo },
-        });
+        };
 
         return session;
       },
       { timeout: 15000 },
     );
+
+    if (auditLogPayload) {
+      this.auditService
+        .logEvent(auditLogPayload)
+        .catch((err) => console.error('Failed to log event', err));
+    }
+
+    return result;
   }
 
   async clockOut(workerId: string) {
-    return this.prisma.$transaction(
+    let auditLogPayload: any = null;
+    const result = await this.prisma.$transaction(
       async (trx) => {
         const active = await trx.workerSession.findFirst({
           where: {
@@ -128,17 +139,25 @@ export class WorkersService {
           await trx.notification.createMany({ data: notificationsData });
         }
 
-        await this.auditService.logEvent({
+        auditLogPayload = {
           actorId: workerId,
           action: 'WORKER_CLOCK_OUT',
           targetId: session.id,
           entityType: 'WorkerSession',
-        });
+        };
 
         return session;
       },
       { timeout: 15000 },
     );
+
+    if (auditLogPayload) {
+      this.auditService
+        .logEvent(auditLogPayload)
+        .catch((err) => console.error('Failed to log event', err));
+    }
+
+    return result;
   }
 
   async getActiveSession(workerId: string) {
@@ -156,7 +175,8 @@ export class WorkersService {
     amount: Prisma.Decimal;
     description?: string;
   }) {
-    return this.prisma.$transaction(
+    let auditLogPayload: any = null;
+    const result = await this.prisma.$transaction(
       async (trx) => {
         const activeSession = await trx.workerSession.findFirst({
           where: {
@@ -208,13 +228,13 @@ export class WorkersService {
           },
         });
 
-        await this.auditService.logEvent({
+        auditLogPayload = {
           actorId: params.workerId,
           action: 'WORKER_CASH_DEPOSIT',
           targetId: tx.id,
           entityType: 'Transaction',
           newValues: { amount: params.amount.toString() },
-        });
+        };
 
         const notificationsData: any[] = [];
 
@@ -283,6 +303,14 @@ export class WorkersService {
       },
       { timeout: 15000 },
     );
+
+    if (auditLogPayload) {
+      this.auditService
+        .logEvent(auditLogPayload)
+        .catch((err) => console.error('Failed to log event', err));
+    }
+
+    return result;
   }
 
   async listWorkerCollections(workerId: string): Promise<{
