@@ -23,6 +23,7 @@
     "db:backup": "npx tsx scripts/backup-db.ts"
   },
   "dependencies": {
+    "@axiomhq/js": "^2.0.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",

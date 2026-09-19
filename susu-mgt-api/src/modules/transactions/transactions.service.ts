@@ -19,11 +19,16 @@ function generateReference(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+import { AuditService } from '../audit/audit.service.js';
+
 @Injectable()
 export class TransactionsService {
   private readonly logger = new Logger(TransactionsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async handleExpiredPendingTransactions() {
@@ -361,19 +366,17 @@ export class TransactionsService {
 
       // Create an audit log entry for this withdrawal request
       try {
-        await tx.auditLog.create({
-          data: {
-            actorId: params.userId,
-            action: 'CREATE_WITHDRAWAL_REQUEST',
-            targetId: withdrawalTx.id,
-            entityType: 'Transaction',
-            newValues: {
-              amount: params.amount.toString(),
-              currency: wallet.currency,
-              paymentMethod: params.method,
-              referenceId,
-              status: withdrawalTx.status,
-            },
+        await this.auditService.logEvent({
+          actorId: params.userId,
+          action: 'CREATE_WITHDRAWAL_REQUEST',
+          targetId: withdrawalTx.id,
+          entityType: 'Transaction',
+          newValues: {
+            amount: params.amount.toString(),
+            currency: wallet.currency,
+            paymentMethod: params.method,
+            referenceId,
+            status: withdrawalTx.status,
           },
         });
       } catch (err) {
@@ -543,14 +546,12 @@ export class TransactionsService {
           },
         });
 
-        await trx.auditLog.create({
-          data: {
-            actorId: tx.userId,
-            action: 'PAYSTACK_DEPOSIT_SUCCESS',
-            targetId: tx.id,
-            entityType: 'Transaction',
-            newValues: { status: TransactionStatus.SUCCESS },
-          },
+        await this.auditService.logEvent({
+          actorId: tx.userId,
+          action: 'PAYSTACK_DEPOSIT_SUCCESS',
+          targetId: tx.id,
+          entityType: 'Transaction',
+          newValues: { status: TransactionStatus.SUCCESS },
         });
 
         const notificationsData: any[] = [];
@@ -652,14 +653,12 @@ export class TransactionsService {
           },
         });
 
-        await trx.auditLog.create({
-          data: {
-            actorId: params.adminId,
-            action: 'WITHDRAWAL_APPROVED',
-            targetId: tx.id,
-            entityType: 'Transaction',
-            newValues: { status: TransactionStatus.APPROVED },
-          },
+        await this.auditService.logEvent({
+          actorId: params.adminId,
+          action: 'WITHDRAWAL_APPROVED',
+          targetId: tx.id,
+          entityType: 'Transaction',
+          newValues: { status: TransactionStatus.APPROVED },
         });
 
         const notificationsData: any[] = [];
@@ -752,17 +751,15 @@ export class TransactionsService {
           },
         });
 
-        await trx.auditLog.create({
-          data: {
-            actorId: params.adminId,
-            action: 'WITHDRAWAL_PAYMENT_CONFIRMED',
-            targetId: tx.id,
-            entityType: 'Transaction',
-            newValues: {
-              balanceBefore,
-              balanceAfter,
-              status: TransactionStatus.SUCCESS,
-            },
+        await this.auditService.logEvent({
+          actorId: params.adminId,
+          action: 'WITHDRAWAL_PAYMENT_CONFIRMED',
+          targetId: tx.id,
+          entityType: 'Transaction',
+          newValues: {
+            balanceBefore,
+            balanceAfter,
+            status: TransactionStatus.SUCCESS,
           },
         });
 
@@ -855,17 +852,15 @@ export class TransactionsService {
           },
         });
 
-        await trx.auditLog.create({
-          data: {
-            actorId: params.workerId,
-            action: 'WORKER_WITHDRAWAL_PAYMENT_CONFIRMED',
-            targetId: tx.id,
-            entityType: 'Transaction',
-            newValues: {
-              balanceBefore,
-              balanceAfter,
-              status: TransactionStatus.SUCCESS,
-            },
+        await this.auditService.logEvent({
+          actorId: params.workerId,
+          action: 'WORKER_WITHDRAWAL_PAYMENT_CONFIRMED',
+          targetId: tx.id,
+          entityType: 'Transaction',
+          newValues: {
+            balanceBefore,
+            balanceAfter,
+            status: TransactionStatus.SUCCESS,
           },
         });
 
@@ -925,14 +920,12 @@ export class TransactionsService {
       },
     });
 
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: params.adminId,
-        action: 'WITHDRAWAL_REJECTED',
-        targetId: tx.id,
-        entityType: 'Transaction',
-        newValues: { status: TransactionStatus.FAILED },
-      },
+    await this.auditService.logEvent({
+      actorId: params.adminId,
+      action: 'WITHDRAWAL_REJECTED',
+      targetId: tx.id,
+      entityType: 'Transaction',
+      newValues: { status: TransactionStatus.FAILED },
     });
 
     await this.prisma.notification.create({

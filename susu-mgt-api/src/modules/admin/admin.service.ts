@@ -8,11 +8,14 @@ import { Prisma } from '../../generated/prisma/client.js';
 import { SupabaseService } from '../auth/supabase.service.js';
 import { CreateStaffDto } from './dto/create-staff.dto.js';
 
+import { AuditService } from '../audit/audit.service.js';
+
 @Injectable()
 export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly supabaseService: SupabaseService,
+    private readonly auditService: AuditService,
   ) {}
 
   async getDashboardStats() {
@@ -149,11 +152,16 @@ export class AdminService {
     };
 
     if (params?.search) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.search.trim());
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          params.search.trim(),
+        );
       where.OR = [
         { description: { contains: params.search, mode: 'insensitive' } },
         { referenceId: { contains: params.search, mode: 'insensitive' } },
-        { user: { fullName: { contains: params.search, mode: 'insensitive' } } },
+        {
+          user: { fullName: { contains: params.search, mode: 'insensitive' } },
+        },
         { user: { email: { contains: params.search, mode: 'insensitive' } } },
         ...(isUuid ? [{ id: params.search.trim() }] : []),
       ];
@@ -184,52 +192,12 @@ export class AdminService {
     };
   }
 
-  async getAuditLogs(params?: { page: number; limit: number; search?: string }) {
-    const page =
-      params && Number.isFinite(params.page) && params.page > 0
-        ? params.page
-        : 1;
-    const limit =
-      params && Number.isFinite(params.limit) && params.limit > 0
-        ? Math.min(params.limit, 100)
-        : 20;
-
-    const skip = (page - 1) * limit;
-
-    const where: Prisma.AuditLogWhereInput = {};
-
-    if (params?.search) {
-      where.OR = [
-        { action: { contains: params.search, mode: 'insensitive' } },
-        { entityType: { contains: params.search, mode: 'insensitive' } },
-        { targetId: { contains: params.search, mode: 'insensitive' } },
-        { actor: { fullName: { contains: params.search, mode: 'insensitive' } } },
-        { actor: { email: { contains: params.search, mode: 'insensitive' } } },
-      ];
-    }
-
-    const [total, data] = await Promise.all([
-      this.prisma.auditLog.count({ where }),
-      this.prisma.auditLog.findMany({
-        where,
-        include: {
-          actor: { select: { fullName: true, email: true, role: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-    ]);
-
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+  async getAuditLogs(params?: {
+    page: number;
+    limit: number;
+    search?: string;
+  }) {
+    return this.auditService.getAuditLogs(params || {});
   }
 
   async getWorkerCollections(params?: {
@@ -258,13 +226,22 @@ export class AdminService {
     };
 
     if (params?.search) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.search.trim());
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          params.search.trim(),
+        );
       where.OR = [
         { description: { contains: params.search, mode: 'insensitive' } },
         { referenceId: { contains: params.search, mode: 'insensitive' } },
-        { user: { fullName: { contains: params.search, mode: 'insensitive' } } },
+        {
+          user: { fullName: { contains: params.search, mode: 'insensitive' } },
+        },
         { user: { email: { contains: params.search, mode: 'insensitive' } } },
-        { worker: { fullName: { contains: params.search, mode: 'insensitive' } } },
+        {
+          worker: {
+            fullName: { contains: params.search, mode: 'insensitive' },
+          },
+        },
         { worker: { email: { contains: params.search, mode: 'insensitive' } } },
         ...(isUuid ? [{ id: params.search.trim() }] : []),
       ];
@@ -366,11 +343,16 @@ export class AdminService {
     };
 
     if (params?.search) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.search.trim());
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          params.search.trim(),
+        );
       where.OR = [
         { description: { contains: params.search, mode: 'insensitive' } },
         { referenceId: { contains: params.search, mode: 'insensitive' } },
-        { user: { fullName: { contains: params.search, mode: 'insensitive' } } },
+        {
+          user: { fullName: { contains: params.search, mode: 'insensitive' } },
+        },
         { user: { email: { contains: params.search, mode: 'insensitive' } } },
         ...(isUuid ? [{ id: params.search.trim() }] : []),
       ];
@@ -444,15 +426,13 @@ export class AdminService {
       data: { isLocked: true },
     });
 
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: adminId,
-        action: 'WALLET_LOCKED',
-        targetId: wallet.id,
-        entityType: 'Wallet',
-        oldValues: { isLocked: false },
-        newValues: { isLocked: true },
-      },
+    await this.auditService.logEvent({
+      actorId: adminId,
+      action: 'WALLET_LOCKED',
+      targetId: wallet.id,
+      entityType: 'Wallet',
+      oldValues: { isLocked: false },
+      newValues: { isLocked: true },
     });
 
     return updated;
@@ -476,15 +456,13 @@ export class AdminService {
       data: { isLocked: false },
     });
 
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: adminId,
-        action: 'WALLET_UNLOCKED',
-        targetId: wallet.id,
-        entityType: 'Wallet',
-        oldValues: { isLocked: true },
-        newValues: { isLocked: false },
-      },
+    await this.auditService.logEvent({
+      actorId: adminId,
+      action: 'WALLET_UNLOCKED',
+      targetId: wallet.id,
+      entityType: 'Wallet',
+      oldValues: { isLocked: true },
+      newValues: { isLocked: false },
     });
 
     return updated;
@@ -598,14 +576,12 @@ export class AdminService {
       },
     });
 
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: adminId,
-        action: 'WORKER_SESSION_TERMINATED',
-        targetId: sessionId,
-        entityType: 'WorkerSession',
-        newValues: { status: 'ENDED', terminatedByAdmin: true },
-      },
+    await this.auditService.logEvent({
+      actorId: adminId,
+      action: 'WORKER_SESSION_TERMINATED',
+      targetId: sessionId,
+      entityType: 'WorkerSession',
+      newValues: { status: 'ENDED', terminatedByAdmin: true },
     });
 
     return updated;

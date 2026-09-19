@@ -161,9 +161,9 @@ export function AuditLogsPage() {
                     </tr>
                   ))
                 ) : logs.length > 0 ? (
-                  logs.map((log: any) => (
+                  logs.map((log: any, index: number) => (
                     <tr
-                      key={log.id}
+                      key={log.id || log._id || index}
                       className="group  hover:bg-[#131c3d]/60 transition-all duration-300 ease-out"
                     >
                       <td className="px-6 py-7">
@@ -176,7 +176,7 @@ export function AuditLogsPage() {
                               {formatAction(log.action)}
                             </p>
                             <p className="text-xs text-zinc-500 font-medium max-w-xs truncate mt-0.5" title={log.details}>
-                              {log.details || `ID: ${log.id.slice(0, 8).toUpperCase()}`}
+                              {log.details || (log.id ? `ID: ${log.id.slice(0, 8).toUpperCase()}` : log._id ? `ID: ${log._id.slice(0, 8).toUpperCase()}` : 'No details')}
                             </p>
                           </div>
                         </div>
@@ -195,9 +195,9 @@ export function AuditLogsPage() {
                         </p>
                       </td>
                       <td className="px-6 py-5.5 text-xs text-zinc-400">
-                        {log.createdAt
+                        {log.createdAt || log.timestamp || log._time
                           ? format(
-                            new Date(log.createdAt),
+                            new Date(log.createdAt || log.timestamp || log._time),
                             "MMM dd, yyyy HH:mm:ss",
                           )
                           : "N/A"}
@@ -331,7 +331,7 @@ export function AuditLogsPage() {
                     IP Address
                   </p>
                   <p className="font-bold text-zinc-200">
-                    {selectedLog.ipAddress || "Unknown"}
+                    {selectedLog.ipAddress || selectedLog.newValues?.ipAddress || selectedLog.oldValues?.ipAddress || "Unknown"}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -339,8 +339,8 @@ export function AuditLogsPage() {
                     Timestamp
                   </p>
                   <p className="font-bold text-zinc-200">
-                    {selectedLog.createdAt
-                      ? format(new Date(selectedLog.createdAt), "PPpp")
+                    {selectedLog.createdAt || selectedLog.timestamp || selectedLog._time
+                      ? format(new Date(selectedLog.createdAt || selectedLog.timestamp || selectedLog._time), "PPpp")
                       : "N/A"}
                   </p>
                 </div>
@@ -350,7 +350,7 @@ export function AuditLogsPage() {
                   User Agent
                 </p>
                 <p className="font-medium text-[11px] text-zinc-400 break-all bg-[#0b1026] p-2.5 rounded-xl border border-white/5 leading-relaxed">
-                  {selectedLog.userAgent || "Unknown"}
+                  {selectedLog.userAgent || selectedLog.newValues?.userAgent || selectedLog.newValues?.deviceInfo || selectedLog.oldValues?.userAgent || "Unknown"}
                 </p>
               </div>
 
