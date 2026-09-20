@@ -218,7 +218,9 @@ export function AuditLogsPage() {
                   <tr>
                     <td colSpan={5} className="px-6 py-24 text-center bg-[#0f1630]">
                       <History className="h-12 w-12 text-zinc-700 mx-auto mb-4 animate-pulse" />
-                      <h3 className="text-base font-bold text-zinc-300">No audit logs found</h3>
+                      <h3 className="text-base font-bold text-zinc-300">
+                        {data?.message?.includes("Axiom") ? data.message : "No audit logs found"}
+                      </h3>
                     </td>
                   </tr>
                 )}
