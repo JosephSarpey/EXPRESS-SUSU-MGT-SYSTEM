@@ -51,6 +51,18 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   ALLOWED_ORIGINS: string;
+
+  @IsString()
+  @IsOptional()
+  AXIOM_API_TOKEN?: string;
+
+  @IsString()
+  @IsOptional()
+  AXIOM_DATASET?: string;
+
+  @IsString()
+  @IsOptional()
+  AXIOM_URL?: string;
 }
 
 export function validate(config: Record<string, any>) {

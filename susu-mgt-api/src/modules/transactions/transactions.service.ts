@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   BadRequestException,
   ForbiddenException,
@@ -19,11 +20,16 @@ function generateReference(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+import { AuditService } from '../audit/audit.service.js';
+
 @Injectable()
 export class TransactionsService {
   private readonly logger = new Logger(TransactionsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async handleExpiredPendingTransactions() {
@@ -203,7 +209,8 @@ export class TransactionsService {
     amount: Prisma.Decimal;
     method: PaymentMethod;
   }) {
-    return this.prisma.$transaction(async (tx) => {
+    let auditLogPayload: any = null;
+    const result = await this.prisma.$transaction(async (tx) => {
       const wallet = await tx.wallet.findUnique({
         where: { userId: params.userId },
       });
@@ -359,32 +366,36 @@ export class TransactionsService {
         }
       }
 
-      // Create an audit log entry for this withdrawal request
-      try {
-        await tx.auditLog.create({
-          data: {
-            actorId: params.userId,
-            action: 'CREATE_WITHDRAWAL_REQUEST',
-            targetId: withdrawalTx.id,
-            entityType: 'Transaction',
-            newValues: {
-              amount: params.amount.toString(),
-              currency: wallet.currency,
-              paymentMethod: params.method,
-              referenceId,
-              status: withdrawalTx.status,
-            },
-          },
-        });
-      } catch (err) {
-        this.logger.error(
-          'Failed to create audit log for withdrawal request',
-          err,
-        );
-      }
+      // Prepare audit log payload
+      auditLogPayload = {
+        actorId: params.userId,
+        action: 'CREATE_WITHDRAWAL_REQUEST',
+        targetId: withdrawalTx.id,
+        entityType: 'Transaction',
+        newValues: {
+          amount: params.amount.toString(),
+          currency: wallet.currency,
+          paymentMethod: params.method,
+          referenceId,
+          status: withdrawalTx.status,
+        },
+      };
 
       return withdrawalTx;
     });
+
+    if (auditLogPayload) {
+      this.auditService
+        .logEvent(auditLogPayload)
+        .catch((err) =>
+          this.logger.error(
+            'Failed to create audit log for withdrawal request',
+            err,
+          ),
+        );
+    }
+
+    return result;
   }
 
   async createOrReusePendingPaystackDeposit(params: {
@@ -461,7 +472,8 @@ export class TransactionsService {
     amount: number;
     gatewayResponse: Prisma.InputJsonValue;
   }) {
-    return this.prisma.$transaction(
+    let auditLogPayload: any = null;
+    const result = await this.prisma.$transaction(
       async (trx) => {
         const tx = await trx.transaction.findUnique({
           where: { referenceId: params.referenceId },
@@ -543,15 +555,13 @@ export class TransactionsService {
           },
         });
 
-        await trx.auditLog.create({
-          data: {
-            actorId: tx.userId,
-            action: 'PAYSTACK_DEPOSIT_SUCCESS',
-            targetId: tx.id,
-            entityType: 'Transaction',
-            newValues: { status: TransactionStatus.SUCCESS },
-          },
-        });
+        auditLogPayload = {
+          actorId: tx.userId,
+          action: 'PAYSTACK_DEPOSIT_SUCCESS',
+          targetId: tx.id,
+          entityType: 'Transaction',
+          newValues: { status: TransactionStatus.SUCCESS },
+        };
 
         const notificationsData: any[] = [];
         notificationsData.push({
@@ -587,6 +597,14 @@ export class TransactionsService {
       },
       { timeout: 15000 },
     );
+
+    if (auditLogPayload) {
+      this.auditService
+        .logEvent(auditLogPayload)
+        .catch((err) => this.logger.error('Failed to log event', err));
+    }
+
+    return result;
   }
 
   async approveWithdrawalRequest(params: {
@@ -594,7 +612,8 @@ export class TransactionsService {
     transactionId: string;
     remarks?: string;
   }) {
-    return this.prisma.$transaction(
+    let auditLogPayload: any = null;
+    const result = await this.prisma.$transaction(
       async (trx) => {
         const tx = await trx.transaction.findUnique({
           where: { id: params.transactionId },
@@ -652,15 +671,13 @@ export class TransactionsService {
           },
         });
 
-        await trx.auditLog.create({
-          data: {
-            actorId: params.adminId,
-            action: 'WITHDRAWAL_APPROVED',
-            targetId: tx.id,
-            entityType: 'Transaction',
-            newValues: { status: TransactionStatus.APPROVED },
-          },
-        });
+        auditLogPayload = {
+          actorId: params.adminId,
+          action: 'WITHDRAWAL_APPROVED',
+          targetId: tx.id,
+          entityType: 'Transaction',
+          newValues: { status: TransactionStatus.APPROVED },
+        };
 
         const notificationsData: any[] = [];
         notificationsData.push({
@@ -695,6 +712,14 @@ export class TransactionsService {
       },
       { timeout: 15000 },
     );
+
+    if (auditLogPayload) {
+      this.auditService
+        .logEvent(auditLogPayload)
+        .catch((err) => this.logger.error('Failed to log event', err));
+    }
+
+    return result;
   }
 
   async confirmWithdrawalPayment(params: {
@@ -702,7 +727,8 @@ export class TransactionsService {
     transactionId: string;
     remarks?: string;
   }) {
-    return this.prisma.$transaction(
+    let auditLogPayload: any = null;
+    const result = await this.prisma.$transaction(
       async (trx) => {
         const tx = await trx.transaction.findUnique({
           where: { id: params.transactionId },
@@ -752,19 +778,17 @@ export class TransactionsService {
           },
         });
 
-        await trx.auditLog.create({
-          data: {
-            actorId: params.adminId,
-            action: 'WITHDRAWAL_PAYMENT_CONFIRMED',
-            targetId: tx.id,
-            entityType: 'Transaction',
-            newValues: {
-              balanceBefore,
-              balanceAfter,
-              status: TransactionStatus.SUCCESS,
-            },
+        auditLogPayload = {
+          actorId: params.adminId,
+          action: 'WITHDRAWAL_PAYMENT_CONFIRMED',
+          targetId: tx.id,
+          entityType: 'Transaction',
+          newValues: {
+            balanceBefore,
+            balanceAfter,
+            status: TransactionStatus.SUCCESS,
           },
-        });
+        };
 
         const notificationsData: any[] = [];
         notificationsData.push({
@@ -790,6 +814,14 @@ export class TransactionsService {
       },
       { timeout: 15000 },
     );
+
+    if (auditLogPayload) {
+      this.auditService
+        .logEvent(auditLogPayload)
+        .catch((err) => this.logger.error('Failed to log event', err));
+    }
+
+    return result;
   }
 
   async workerConfirmWithdrawalPayment(params: {
@@ -797,7 +829,8 @@ export class TransactionsService {
     transactionId: string;
     remarks?: string;
   }) {
-    return this.prisma.$transaction(
+    let auditLogPayload: any = null;
+    const result = await this.prisma.$transaction(
       async (trx) => {
         const tx = await trx.transaction.findUnique({
           where: { id: params.transactionId },
@@ -855,19 +888,17 @@ export class TransactionsService {
           },
         });
 
-        await trx.auditLog.create({
-          data: {
-            actorId: params.workerId,
-            action: 'WORKER_WITHDRAWAL_PAYMENT_CONFIRMED',
-            targetId: tx.id,
-            entityType: 'Transaction',
-            newValues: {
-              balanceBefore,
-              balanceAfter,
-              status: TransactionStatus.SUCCESS,
-            },
+        auditLogPayload = {
+          actorId: params.workerId,
+          action: 'WORKER_WITHDRAWAL_PAYMENT_CONFIRMED',
+          targetId: tx.id,
+          entityType: 'Transaction',
+          newValues: {
+            balanceBefore,
+            balanceAfter,
+            status: TransactionStatus.SUCCESS,
           },
-        });
+        };
 
         const notificationsData: any[] = [];
         notificationsData.push({
@@ -893,6 +924,14 @@ export class TransactionsService {
       },
       { timeout: 15000 },
     );
+
+    if (auditLogPayload) {
+      this.auditService
+        .logEvent(auditLogPayload)
+        .catch((err) => this.logger.error('Failed to log event', err));
+    }
+
+    return result;
   }
 
   async rejectWithdrawalRequest(params: {
@@ -925,14 +964,12 @@ export class TransactionsService {
       },
     });
 
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: params.adminId,
-        action: 'WITHDRAWAL_REJECTED',
-        targetId: tx.id,
-        entityType: 'Transaction',
-        newValues: { status: TransactionStatus.FAILED },
-      },
+    await this.auditService.logEvent({
+      actorId: params.adminId,
+      action: 'WITHDRAWAL_REJECTED',
+      targetId: tx.id,
+      entityType: 'Transaction',
+      newValues: { status: TransactionStatus.FAILED },
     });
 
     await this.prisma.notification.create({

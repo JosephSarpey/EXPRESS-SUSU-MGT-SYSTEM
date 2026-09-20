@@ -16,6 +16,7 @@ import { AdminModule } from './modules/admin/admin.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { AddressesModule } from './modules/addresses/addresses.module.js';
 import { BackupModule } from './modules/backup/backup.module.js';
+import { AuditModule } from './modules/audit/audit.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { LoggerMiddleware } from './common/middleware/logger.middleware.js';
 import { validate } from './config/env.validation.js';
@@ -37,6 +38,7 @@ import { validate } from './config/env.validation.js';
     NotificationsModule,
     AddressesModule,
     BackupModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [

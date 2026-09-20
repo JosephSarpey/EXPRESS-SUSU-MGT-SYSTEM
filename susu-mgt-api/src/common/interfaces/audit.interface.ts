@@ -1,0 +1,10 @@
+export interface AuditEvent {
+  actorId: string;
+  action: string;
+  targetId?: string;
+  entityType?: string;
+  oldValues?: Record<string, any>;
+  newValues?: Record<string, any>;
+  ipAddress?: string;
+  userAgent?: string;
+}

@@ -106,8 +106,6 @@ model User {
 
   resetTokens         PasswordResetToken[]
 
-  auditLogs           AuditLog[]
-
   approvalsReceived   AccountApproval[] @relation("ApprovedUser")
   approvalsMade       AccountApproval[] @relation("ApprovedBy")
 
@@ -274,40 +272,6 @@ model AccountApproval {
 
   @@index([userId])
   @@index([approvedById])
-}
-
-//////////////////////////////////////////////////////
-// AUDIT LOGS
-//////////////////////////////////////////////////////
-
-model AuditLog {
-  id            String   @id @default(uuid()) @db.Uuid
-
-  actorId       String   @db.Uuid
-
-  action        String
-
-  targetId      String?
-
-  entityType    String?
-
-  oldValues     Json?
-
-  newValues     Json?
-
-  ipAddress     String?
-
-  userAgent     String?
-
-  createdAt     DateTime @default(now())
-
-  //////////////////////////////////////////////////////
-  // RELATIONS
-  //////////////////////////////////////////////////////
-
-  actor         User @relation(fields: [actorId], references: [id])
-
-  @@index([actorId])
 }
 
 //////////////////////////////////////////////////////
