@@ -18,11 +18,13 @@ import {
 } from '@nestjs/swagger';
 import { WorkersService } from './workers.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { TransactionsService } from '../transactions/transactions.service.js';
 import { SupabaseJwtGuard } from '../auth/supabase-jwt.guard.js';
 import { CurrentUser } from '../../common/auth/current-user.decorator.js';
 import { RolesGuard } from '../../common/auth/roles.guard.js';
 import { Roles } from '../../common/auth/roles.decorator.js';
 import { CashDepositDto } from './dto/cash-deposit.dto.js';
+import { WorkerCreateWithdrawalDto } from './dto/worker-create-withdrawal.dto.js';
 import { ClockInDto } from './dto/clock-in.dto.js';
 import { Prisma } from '../../generated/prisma/client.js';
 
@@ -34,6 +36,7 @@ export class WorkersController {
   constructor(
     private readonly workersService: WorkersService,
     private readonly notificationsService: NotificationsService,
+    private readonly transactionsService: TransactionsService,
   ) {}
 
   @Post('clock-in')
@@ -159,6 +162,34 @@ export class WorkersController {
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
       search,
+    });
+  }
+
+  @Post('create-withdrawal')
+  @Roles('WORKER')
+  @ApiOperation({ summary: 'Create withdrawal request on behalf of a user' })
+  @ApiResponse({
+    status: 201,
+    description: 'Withdrawal request created successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Insufficient balance or invalid request',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'No active worker session',
+  })
+  async createWithdrawalForUser(
+    @CurrentUser() user: { id: string },
+    @Body() dto: WorkerCreateWithdrawalDto,
+  ) {
+    return this.transactionsService.workerCreateWithdrawalRequest({
+      workerId: user.id,
+      userId: dto.userId,
+      amount: new Prisma.Decimal(dto.amount),
+      method: dto.method,
+      description: dto.description,
     });
   }
 

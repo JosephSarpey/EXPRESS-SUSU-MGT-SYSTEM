@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../../prisma.service.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { SupabaseService } from '../auth/supabase.service.js';
-import { CreateStaffDto } from './dto/create-staff.dto.js';
+import { CreateUserDto } from './dto/create-user.dto.js';
 
 import { AuditService } from '../audit/audit.service.js';
 
@@ -94,7 +94,7 @@ export class AdminService {
     };
   }
 
-  async createStaffAccount(adminUserId: string, data: CreateStaffDto) {
+  async createUserAccount(adminUserId: string, data: CreateUserDto) {
     // 1. Create the user in Supabase Auth via Admin API
     const supabaseUser = await this.supabaseService.adminCreateUser(
       data.email,
@@ -107,20 +107,33 @@ export class AdminService {
     );
 
     if (!supabaseUser.user) {
-      throw new Error('Failed to create staff account in Supabase');
+      throw new Error('Failed to create user account in Supabase');
     }
 
     // 2. Create the user in the local Prisma Database
-    const createdUser = await this.prisma.user.create({
-      data: {
-        id: supabaseUser.user.id,
-        email: data.email,
-        phone: data.phone ?? null,
-        fullName: data.fullName,
-        role: data.role,
-        status: 'ACTIVE',
-        emailVerified: true,
-      },
+    const createdUser = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          id: supabaseUser.user.id,
+          email: data.email,
+          phone: data.phone ?? null,
+          fullName: data.fullName,
+          role: data.role,
+          status: 'ACTIVE',
+          emailVerified: true,
+        },
+      });
+
+      if (data.role === 'CUSTOMER') {
+        await tx.wallet.create({
+          data: {
+            userId: user.id,
+            currency: 'GHS',
+          },
+        });
+      }
+
+      return user;
     });
 
     return createdUser;

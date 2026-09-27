@@ -27,6 +27,7 @@ import {
   ChevronRight,
   Filter,
   MapPin,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ import {
 } from "@/store";
 import { format } from "date-fns";
 import { TransactionDetailsModal } from "@/components/features/transactions/transaction-details-modal";
+import { WorkerCreateWithdrawalModal } from "@/components/features/transactions/worker-create-withdrawal-modal";
 import { Transaction } from "@/services/api/transactions.service";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
@@ -54,6 +56,7 @@ export function WithdrawalRequestPage() {
   const [search, setSearch] = useState("");
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -123,10 +126,19 @@ export function WithdrawalRequestPage() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <Button variant="outline" className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-zinc-300 hover:text-white text-xs sm:text-sm font-bold transition-colors duration-300 h-11 px-5 gap-2 w-full md:w-auto justify-center shrink-0">
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <Button variant="outline" className="rounded-xl border border-white/5 bg-[#141d3d] hover:bg-[#1c2957] text-zinc-300 hover:text-white text-xs sm:text-sm font-bold transition-colors duration-300 h-11 px-5 gap-2 flex-1 md:flex-auto justify-center shrink-0">
+                  <Filter className="h-4 w-4" />
+                  Filter
+                </Button>
+                <Button 
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-all duration-300 h-11 px-5 gap-2 flex-1 md:flex-auto justify-center shadow-lg shadow-emerald-950/20"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Request
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0 bg-[#0f1630]">
@@ -420,6 +432,10 @@ export function WithdrawalRequestPage() {
       <TransactionDetailsModal
         transaction={selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
+      />
+      <WorkerCreateWithdrawalModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
       />
     </div>
   );

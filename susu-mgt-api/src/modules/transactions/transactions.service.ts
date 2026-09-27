@@ -934,6 +934,207 @@ export class TransactionsService {
     return result;
   }
 
+  async workerCreateWithdrawalRequest(params: {
+    workerId: string;
+    userId: string;
+    amount: Prisma.Decimal;
+    method: PaymentMethod;
+    description?: string;
+  }) {
+    let auditLogPayload: any = null;
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        // Verify the worker has an active session
+        const activeSession = await tx.workerSession.findFirst({
+          where: {
+            workerId: params.workerId,
+            status: 'ACTIVE',
+          },
+        });
+
+        if (!activeSession) {
+          throw new ForbiddenException('No active worker session');
+        }
+
+        const wallet = await tx.wallet.findUnique({
+          where: { userId: params.userId },
+        });
+
+        if (!wallet) {
+          throw new NotFoundException('Wallet not found for this user');
+        }
+
+        if (wallet.isLocked) {
+          throw new ForbiddenException('Wallet is locked');
+        }
+
+        // Compute total pending withdrawal amount for the user
+        const pendingAgg = await tx.transaction.aggregate({
+          where: {
+            userId: params.userId,
+            type: TransactionType.WITHDRAWAL,
+            status: TransactionStatus.PENDING,
+          },
+          _sum: { amount: true },
+        });
+        const pendingTotal =
+          pendingAgg._sum.amount ?? new Prisma.Decimal(0);
+        if (wallet.balance.lessThan(params.amount.plus(pendingTotal))) {
+          const available = wallet.balance.minus(pendingTotal);
+          throw new BadRequestException(
+            `User doesn't have enough available funds for this withdrawal. Available balance is GHS${available.toString()}.`,
+          );
+        }
+
+        const referenceId = generateReference('wd');
+
+        // Idempotency: if a similar pending withdrawal was just created, return it
+        const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+        const existingPending = await tx.transaction.findFirst({
+          where: {
+            userId: params.userId,
+            type: TransactionType.WITHDRAWAL,
+            status: TransactionStatus.PENDING,
+            amount: params.amount,
+            paymentMethod: params.method,
+            createdAt: { gte: oneMinuteAgo },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        if (existingPending) {
+          this.logger.log(
+            `Found existing pending withdrawal for user ${params.userId}, returning existing transaction ${existingPending.id}`,
+          );
+          return existingPending;
+        }
+
+        // Determine payment gateway based on payment method
+        const paymentGateway =
+          params.method === 'CASH'
+            ? ('WORKER_CASH' as PaymentGateway)
+            : ('PAYSTACK' as PaymentGateway);
+
+        const withdrawalTx = await tx.transaction.create({
+          data: {
+            referenceId,
+            userId: params.userId,
+            workerId: params.workerId,
+            walletId: wallet.id,
+            type: TransactionType.WITHDRAWAL,
+            amount: params.amount,
+            paymentGateway,
+            paymentMethod: params.method,
+            status: TransactionStatus.PENDING,
+            balanceBefore: wallet.balance,
+            balanceAfter: wallet.balance,
+            description:
+              params.description ||
+              `Withdrawal request created by worker on behalf of customer`,
+          },
+        });
+
+        // Fetch names for notifications
+        const customer = await tx.user.findUnique({
+          where: { id: params.userId },
+          select: { fullName: true },
+        });
+        const worker = await tx.user.findUnique({
+          where: { id: params.workerId },
+          select: { fullName: true },
+        });
+        const customerName = customer?.fullName ?? 'Unknown User';
+        const workerName = worker?.fullName ?? 'Unknown Worker';
+
+        const notificationsData: Array<any> = [];
+
+        // Notify the customer about the withdrawal request created on their behalf
+        notificationsData.push({
+          userId: params.userId,
+          type: 'SYSTEM',
+          subject: 'Withdrawal request submitted on your behalf',
+          message: `A withdrawal request of ${wallet.currency} ${params.amount.toString()} via ${params.method} has been submitted on your behalf by worker ${workerName} and is pending admin approval.`,
+        });
+
+        // Notify all admins (in-app SYSTEM notification + EMAIL notification)
+        try {
+          const admins = await tx.user.findMany({
+            where: { role: 'ADMIN' },
+            select: { id: true, email: true },
+          });
+
+          const adminSubject =
+            'New withdrawal request submitted by worker';
+          const adminMessage = `Worker ${workerName} submitted a withdrawal request of ${wallet.currency} ${params.amount.toString()} via ${params.method} on behalf of customer ${customerName}. Reference: ${referenceId}`;
+
+          for (const admin of admins) {
+            notificationsData.push({
+              userId: admin.id,
+              type: 'SYSTEM',
+              subject: adminSubject,
+              message: adminMessage,
+            });
+            notificationsData.push({
+              userId: admin.id,
+              type: 'EMAIL',
+              subject: adminSubject,
+              message: adminMessage,
+            });
+          }
+        } catch (err) {
+          this.logger.error(
+            'Failed to notify admins about worker-created withdrawal request',
+            err,
+          );
+        }
+
+        // Notify the worker who created the request
+        notificationsData.push({
+          userId: params.workerId,
+          type: 'SYSTEM',
+          subject: 'Withdrawal request created',
+          message: `You submitted a withdrawal request of ${wallet.currency} ${params.amount.toString()} via ${params.method} on behalf of customer ${customerName}. Reference: ${referenceId}`,
+        });
+
+        if (notificationsData.length > 0) {
+          await tx.notification.createMany({ data: notificationsData });
+        }
+
+        // Prepare audit log payload
+        auditLogPayload = {
+          actorId: params.workerId,
+          action: 'WORKER_CREATE_WITHDRAWAL_REQUEST',
+          targetId: withdrawalTx.id,
+          entityType: 'Transaction',
+          newValues: {
+            amount: params.amount.toString(),
+            currency: wallet.currency,
+            paymentMethod: params.method,
+            referenceId,
+            status: withdrawalTx.status,
+            onBehalfOf: params.userId,
+          },
+        };
+
+        return withdrawalTx;
+      },
+      { timeout: 15000 },
+    );
+
+    if (auditLogPayload) {
+      this.auditService
+        .logEvent(auditLogPayload)
+        .catch((err) =>
+          this.logger.error(
+            'Failed to create audit log for worker-created withdrawal request',
+            err,
+          ),
+        );
+    }
+
+    return result;
+  }
+
   async rejectWithdrawalRequest(params: {
     adminId: string;
     transactionId: string;

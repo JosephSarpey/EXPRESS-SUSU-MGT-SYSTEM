@@ -156,10 +156,10 @@ export function useTerminateSession() {
   })
 }
 
-export function useCreateStaff() {
+export function useCreateUser() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: any) => adminService.createStaff(data),
+    mutationFn: (data: any) => adminService.createUser(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.all })
     },

@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import { PaymentMethod } from './transactions.service'
 
 export interface ClockInDto {
   deviceInfo?: string
@@ -8,6 +9,13 @@ export interface ClockInDto {
 export interface CashDepositDto {
   userId: string
   amount: number
+  description?: string
+}
+
+export interface WorkerCreateWithdrawalDto {
+  userId: string
+  amount: number
+  method: PaymentMethod
   description?: string
 }
 
@@ -38,6 +46,11 @@ export const workersService = {
     return response.data
   },
 
+  createWithdrawalForUser: async (data: WorkerCreateWithdrawalDto) => {
+    const response = await apiClient.post('/workers/create-withdrawal', data)
+    return response.data
+  },
+
   getWorkerCollections: async (params: PaginationParams = {}) => {
     const response = await apiClient.get('/workers/collections', { params })
     return response.data
@@ -58,3 +71,4 @@ export const workersService = {
     return response.data
   }
 }
+

@@ -2,8 +2,8 @@ import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'cl
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '../../../generated/prisma/client.js';
 
-export class CreateStaffDto {
-  @ApiProperty({ example: 'staff@susu.com' })
+export class CreateUserDto {
+  @ApiProperty({ example: 'user@susu.com' })
   @IsEmail()
   @IsNotEmpty()
   email!: string;
@@ -14,7 +14,7 @@ export class CreateStaffDto {
   @IsNotEmpty()
   password!: string;
 
-  @ApiProperty({ example: 'John Staff' })
+  @ApiProperty({ example: 'John Doe' })
   @IsString()
   @IsNotEmpty()
   fullName!: string;
@@ -24,8 +24,9 @@ export class CreateStaffDto {
   @IsOptional()
   phone?: string;
 
-  @ApiProperty({ enum: [Role.ADMIN, Role.WORKER], example: Role.WORKER })
+  @ApiProperty({ enum: [Role.ADMIN, Role.WORKER, Role.CUSTOMER], example: Role.CUSTOMER })
   @IsEnum(Role)
   @IsNotEmpty()
   role!: Role;
 }
+

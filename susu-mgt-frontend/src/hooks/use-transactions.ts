@@ -94,3 +94,14 @@ export function useRejectWithdrawal() {
     },
   })
 }
+
+export function useWorkerCreateWithdrawal() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { userId: string, amount: number, method: any, description?: string }) => 
+      workersService.createWithdrawalForUser(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: transactionKeys.workerWithdrawals({}) })
+    },
+  })
+}

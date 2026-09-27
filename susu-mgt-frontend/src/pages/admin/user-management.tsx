@@ -28,7 +28,7 @@ import { Input } from '@/components/ui/input'
 import { User as UserType } from '@/store/auth-store'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
-import { CreateStaffDialog } from '@/components/admin/create-staff-dialog'
+import { CreateUserDialog } from '@/components/admin/create-user-dialog'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useAdminUIStore } from '@/store/admin-ui-store'
 import { 
@@ -615,7 +615,7 @@ export function UserManagementPage() {
         </div>
       )}
       
-      <CreateStaffDialog 
+      <CreateUserDialog 
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={() => {}}

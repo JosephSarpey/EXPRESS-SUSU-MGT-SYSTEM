@@ -18,12 +18,12 @@ export interface DashboardStats {
   }
 }
 
-export interface CreateStaffDto {
+export interface CreateUserDto {
   email: string
   password?: string
   fullName: string
   phone?: string
-  role: 'ADMIN' | 'WORKER'
+  role: 'ADMIN' | 'WORKER' | 'CUSTOMER'
 }
 
 export interface UpdateSettingDto {
@@ -80,7 +80,7 @@ export const adminService = {
     }
   },
 
-  createStaff: async (data: CreateStaffDto) => {
+  createUser: async (data: CreateUserDto) => {
     const response = await apiClient.post('/admin/users', data)
     return response.data
   },

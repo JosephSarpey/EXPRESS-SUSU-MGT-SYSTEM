@@ -4,18 +4,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { adminService } from '@/services/api/admin.service'
 
-interface CreateStaffDialogProps {
+interface CreateUserDialogProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
 }
 
-export function CreateStaffDialog({ isOpen, onClose, onSuccess }: CreateStaffDialogProps) {
+export function CreateUserDialog({ isOpen, onClose, onSuccess }: CreateUserDialogProps) {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<'ADMIN' | 'WORKER'>('WORKER')
+  const [role, setRole] = useState<'ADMIN' | 'WORKER' | 'CUSTOMER'>('CUSTOMER')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,7 +28,7 @@ export function CreateStaffDialog({ isOpen, onClose, onSuccess }: CreateStaffDia
     setIsLoading(true)
 
     try {
-      await adminService.createStaff({
+      await adminService.createUser({
         fullName,
         email,
         phone,
@@ -42,15 +42,15 @@ export function CreateStaffDialog({ isOpen, onClose, onSuccess }: CreateStaffDia
       setEmail('')
       setPhone('')
       setPassword('')
-      setRole('WORKER')
+      setRole('CUSTOMER')
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to create staff account')
+      setError(err.response?.data?.message || err.message || 'Failed to create user account')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const inputClasses = "pl-10 h-11 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-none"
+  const inputClasses = "pl-10 h-11 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus-visible:ring-2 focus-visible:ring-emerald-500/50"
   const labelClasses = "block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2 ml-1"
 
   return (
@@ -64,7 +64,7 @@ export function CreateStaffDialog({ isOpen, onClose, onSuccess }: CreateStaffDia
             <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Create Staff Account</h2>
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Create User Account</h2>
           </div>
           <button 
             onClick={onClose}
@@ -148,7 +148,18 @@ export function CreateStaffDialog({ isOpen, onClose, onSuccess }: CreateStaffDia
 
           <div>
             <label className={labelClasses}>System Role</label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => setRole('CUSTOMER')}
+                className={`py-3 rounded-xl text-sm font-bold border-2 transition-all ${
+                  role === 'CUSTOMER'
+                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/10 text-purple-600'
+                    : 'border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-500'
+                }`}
+              >
+                Customer
+              </button>
               <button
                 type="button"
                 onClick={() => setRole('WORKER')}

@@ -26,7 +26,7 @@ import { SupabaseJwtGuard } from '../auth/supabase-jwt.guard.js';
 import { RolesGuard } from '../../common/auth/roles.guard.js';
 import { Roles } from '../../common/auth/roles.decorator.js';
 import { CurrentUser } from '../../common/auth/current-user.decorator.js';
-import { CreateStaffDto } from './dto/create-staff.dto.js';
+import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateSettingDto } from './dto/update-setting.dto.js';
 
 @ApiTags('Admin')
@@ -56,20 +56,20 @@ export class AdminController {
   }
 
   @Post('users')
-  @ApiOperation({ summary: 'Create a new staff account (WORKER or ADMIN)' })
+  @ApiOperation({ summary: 'Create a new user account (CUSTOMER, WORKER, or ADMIN)' })
   @ApiResponse({
     status: 201,
-    description: 'Staff account created successfully',
+    description: 'User account created successfully',
   })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Admin access required',
   })
-  async createStaffAccount(
+  async createUserAccount(
     @Request() req: { user: { id: string } },
-    @Body() createStaffDto: CreateStaffDto,
+    @Body() createUserDto: CreateUserDto,
   ) {
-    return this.adminService.createStaffAccount(req.user.id, createStaffDto);
+    return this.adminService.createUserAccount(req.user.id, createUserDto);
   }
 
   @Get('transactions')
